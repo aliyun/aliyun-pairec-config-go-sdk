@@ -3,17 +3,13 @@ Go sdk for PA-REC config server. Aliyun product [link](https://pairec.console.al
 
 # Installation
 
-==========
-
 ```
 go get github.com/aliyun/aliyun-pairec-config-go-sdk 
 ```
 
 # Usage
 
-======
-
-```
+```golang
 // config server info
 host := "" 
 token := ""

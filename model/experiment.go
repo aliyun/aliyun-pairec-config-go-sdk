@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/common"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 )
 
 type ExperimentContext struct {

@@ -2,11 +2,6 @@ package api
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"io/ioutil"
-	"net/url"
-	"strings"
 
 	"github.com/antihax/optional"
 )
@@ -33,6 +28,7 @@ type FlowCtrlApiListFlowCtrlPlansOpts struct {
 	Env     optional.String
 }
 
+/**
 func (a *FlowCtrlApiService) ListFlowCtrlPlans(ctx context.Context, localVarOptionals *FlowCtrlApiListFlowCtrlPlansOpts) (ListFlowCtrlPlansResponse, error) {
 	var (
 		localVarHttpMethod  = strings.ToUpper("Get")
@@ -108,3 +104,5 @@ func (a *FlowCtrlApiService) ListFlowCtrlPlans(ctx context.Context, localVarOpti
 	}
 	return localVarReturnValue, nil
 }
+
+**/

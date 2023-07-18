@@ -1,16 +1,12 @@
 package experiments
 
 import (
-	"context"
-	"fmt"
 	"time"
 
-	"github.com/antihax/optional"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/api"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/common"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/model"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 )
 
+/**
 // LoadSceneFlowCtrlPlansData specifies a function to load flow ctrl plan data from A/B Test Server
 func (e *ExperimentClient) LoadSceneFlowCtrlPlansData() {
 	sceneFlowCtrlPlanData := make(map[string][]model.FlowCtrlPlan, 0)
@@ -66,6 +62,7 @@ func (e *ExperimentClient) loopLoadSceneFlowCtrlPlansData() {
 		e.LoadSceneFlowCtrlPlansData()
 	}
 }
+**/
 
 func (e *ExperimentClient) GetFlowCtrlPlanTargetList(env, sceneName string, currentTimestamp int64) map[int]model.FlowCtrlPlanTargets {
 	if currentTimestamp == 0 {

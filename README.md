@@ -1,24 +1,21 @@
 # aliyun-pairec-config-go-sdk
-Go sdk for PA-REC config server. Aliyun product [link](https://pairec.console.aliyun.com/cn-hangzhou/instances).
+Go sdk for PA-REC config server. Aliyun product [link](https://pairec.console.aliyun.com/v2/cn-hangzhou/instances).
 
 # Installation
 
 ```
-go get github.com/aliyun/aliyun-pairec-config-go-sdk 
+go get github.com/aliyun/aliyun-pairec-config-go-sdk/v2
 ```
 
 # Usage
 
 ```golang
 // config server info
-host := "" 
-token := ""
-// 初始化 client, 必须指定 host 和 environment 字段
-// environment 合法值为 daily, prepub, product
-client, err := NewExperimentClient(host, common.Environment_Prepub_Desc, WithLogger(LoggerFunc(log.Printf)), WithErrorLogger(LoggerFunc(log.Fatalf)), WithToken(token))	
-if err != nil {
-		t.Fatal(err)
-}
+region := "cn-hangzhou"
+instanceId := os.Getenv("INSTANCE_ID")
+accessId := os.Getenv("ACCESS_ID")
+accessKey := os.Getenv("ACCESS_KEY")
+client, err := NewExperimentClient(instanceId, region, accessId, accessKey, environment, WithLogger(LoggerFunc(log.Printf)),  WithErrorLogger(LoggerFunc(log.Fatalf)))
 
 // 具体匹配实验室，构造 ExperimentContext
 experimentContext := model.ExperimentContext{

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/Knetic/govaluate"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/common"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 )
 
 // DiversionBucket is a interface by the bucket type to match diversion

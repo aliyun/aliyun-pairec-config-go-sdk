@@ -1,14 +1,13 @@
 package experiments
 
 import (
-	"context"
 	"fmt"
 	"time"
 
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/api"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 	"github.com/antihax/optional"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/api"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/common"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/model"
 )
 
 func (e *ExperimentClient) logError(err error) {
@@ -26,119 +25,97 @@ func (e *ExperimentClient) logError(err error) {
 func (e *ExperimentClient) LoadExperimentData() {
 	sceneData := make(map[string]*model.Scene, 0)
 
-	listScenesResponse, err := e.APIClient.SceneApi.ListAllScenes(context.Background())
+	listScenesResponse, err := e.APIClient.SceneApi.ListAllScenes()
 	if err != nil {
 		e.logError(fmt.Errorf("list scenes error, err=%v", err))
 		return
 	}
 
-	if listScenesResponse.Code != common.CODE_OK {
-		e.logError(fmt.Errorf("list scenes error, requestid=%s,code=%s, msg=%s", listScenesResponse.RequestId, listScenesResponse.Code, listScenesResponse.Message))
-		return
-	}
-
-	for _, scene := range listScenesResponse.Data["scenes"] {
-		listExpRoomsResponse, err := e.APIClient.ExperimentRoomApi.ListExperimentRooms(context.Background(), e.Environment,
+	for _, scene := range listScenesResponse.Scenes {
+		listExpRoomsResponse, err := e.APIClient.ExperimentRoomApi.ListExperimentRooms(e.Environment,
 			&api.ExperimentRoomApiListExperimentRoomsOpts{SceneId: optional.NewInt64(scene.SceneId), Status: optional.NewUint32(common.ExpRoom_Status_Online)})
 
 		if err != nil {
 			e.logError(fmt.Errorf("list experiment rooms error, err=%v", err))
-			continue
+			return
 		}
-		if listExpRoomsResponse.Code != common.CODE_OK {
-			e.logError(fmt.Errorf("list experiment rooms error, requestid=%s,code=%s, msg=%s", listExpRoomsResponse.RequestId, listExpRoomsResponse.Code, listExpRoomsResponse.Message))
-			continue
-		}
-		for _, experimentRoom := range listExpRoomsResponse.Data["experiment_rooms"] {
+		for _, experimentRoom := range listExpRoomsResponse.ExperimentRooms {
 			if experimentRoom.DebugCrowdId != 0 {
-				listCrowdUsersResponse, err := e.APIClient.CrowdApi.GetCrowdUsersById(context.Background(), experimentRoom.DebugCrowdId)
+				listCrowdUsersResponse, err := e.APIClient.CrowdApi.GetCrowdUsersById(experimentRoom.DebugCrowdId)
 				if err != nil {
 					e.logError(fmt.Errorf("list crowd users error, err=%v", err))
-					continue
+					return
 				}
-				experimentRoom.DebugCrowdIdUsers = listCrowdUsersResponse.Data["users"]
+				experimentRoom.DebugCrowdIdUsers = listCrowdUsersResponse.Users
 			}
 			// ExperimentRoom init
 			if err := experimentRoom.Init(); err != nil {
 				e.logError(fmt.Errorf("experiment room init error, err=%v", err))
-				continue
+				return
 			}
 
 			scene.AddExperimentRoom(experimentRoom)
-			listLayersResponse, err := e.APIClient.LayerApi.ListLayers(context.Background(), experimentRoom.ExpRoomId)
+			listLayersResponse, err := e.APIClient.LayerApi.ListLayers(experimentRoom.ExpRoomId)
 			if err != nil {
 				e.logError(fmt.Errorf("list layers error, err=%v", err))
-				continue
+				return
 			}
-			if listLayersResponse.Code != common.CODE_OK {
-				e.logError(fmt.Errorf("list layers error, requestid=%s,code=%s, msg=%s", listLayersResponse.RequestId, listLayersResponse.Code, listLayersResponse.Message))
-				continue
-			}
-
-			for _, layer := range listLayersResponse.Data["layers"] {
+			for _, layer := range listLayersResponse.Layers {
 				experimentRoom.AddLayer(layer)
 
-				listExperimentGroupResponse, err := e.APIClient.ExperimentGroupApi.ListExperimentGroups(context.Background(), layer.LayerId,
+				listExperimentGroupResponse, err := e.APIClient.ExperimentGroupApi.ListExperimentGroups(layer.LayerId,
 					&api.ExperimentGroupApiListExperimentGroupsOpts{Status: optional.NewUint32(common.ExpGroup_Status_Online)})
 				if err != nil {
 					e.logError(fmt.Errorf("list experiment groups error, err=%v", err))
-					continue
-				}
-				if listExperimentGroupResponse.Code != common.CODE_OK {
-					e.logError(fmt.Errorf("list experiment groups error, requestid=%s,code=%s, msg=%s", listExperimentGroupResponse.RequestId, listExperimentGroupResponse.Code, listExperimentGroupResponse.Message))
-					continue
+					return
 				}
 
-				for _, experimentGroup := range listExperimentGroupResponse.Data["experiment_groups"] {
+				for _, experimentGroup := range listExperimentGroupResponse.ExperimentGroups {
 					if experimentGroup.CrowdId != 0 {
-						listCrowdUsersResponse, err := e.APIClient.CrowdApi.GetCrowdUsersById(context.Background(), experimentGroup.CrowdId)
+						listCrowdUsersResponse, err := e.APIClient.CrowdApi.GetCrowdUsersById(experimentGroup.CrowdId)
 						if err != nil {
 							e.logError(fmt.Errorf("list crowd users error, err=%v", err))
-							continue
+							return
 						}
-						experimentGroup.CrowdUsers = listCrowdUsersResponse.Data["users"]
+						experimentGroup.CrowdUsers = listCrowdUsersResponse.Users
 					}
 
 					if experimentGroup.DebugCrowdId != 0 {
-						listCrowdUsersResponse, err := e.APIClient.CrowdApi.GetCrowdUsersById(context.Background(), experimentGroup.DebugCrowdId)
+						listCrowdUsersResponse, err := e.APIClient.CrowdApi.GetCrowdUsersById(experimentGroup.DebugCrowdId)
 						if err != nil {
 							e.logError(fmt.Errorf("list crowd users error, err=%v", err))
-							continue
+							return
 						}
-						experimentGroup.DebugCrowdUsers = listCrowdUsersResponse.Data["users"]
+						experimentGroup.DebugCrowdUsers = listCrowdUsersResponse.Users
 					}
 
 					// ExperimentGroup init
 					if err := experimentGroup.Init(); err != nil {
 						e.logError(fmt.Errorf("experiment group init error, err=%v", err))
-						continue
+						return
 					}
 
 					layer.AddExperimentGroup(experimentGroup)
 
-					listExperimentsResponse, err := e.APIClient.ExperimentApi.ListExperiments(context.Background(), experimentGroup.ExpGroupId,
+					listExperimentsResponse, err := e.APIClient.ExperimentApi.ListExperiments(experimentGroup.ExpGroupId,
 						&api.ExperimentApiListExperimentsOpts{Status: optional.NewUint32(common.Experiment_Status_Online)})
 					if err != nil {
 						e.logError(fmt.Errorf("list experiments  error, err=%v", err))
-						continue
-					}
-					if listExperimentsResponse.Code != common.CODE_OK {
-						e.logError(fmt.Errorf("list experiments error, requestid=%s,code=%s, msg=%s", listExperimentsResponse.RequestId, listExperimentsResponse.Code, listExperimentsResponse.Message))
-						continue
+						return
 					}
 
-					for _, experiment := range listExperimentsResponse.Data["experiments"] {
+					for _, experiment := range listExperimentsResponse.Experiments {
 						if experiment.DebugCrowdId != 0 {
-							listCrowdUsersResponse, err := e.APIClient.CrowdApi.GetCrowdUsersById(context.Background(), experiment.DebugCrowdId)
+							listCrowdUsersResponse, err := e.APIClient.CrowdApi.GetCrowdUsersById(experiment.DebugCrowdId)
 							if err != nil {
 								e.logError(fmt.Errorf("list crowd users error, err=%v", err))
-								continue
+								return
 							}
-							experiment.DebugCrowdUsers = listCrowdUsersResponse.Data["users"]
+							experiment.DebugCrowdUsers = listCrowdUsersResponse.Users
 						}
 						if err := experiment.Init(); err != nil {
 							e.logError(fmt.Errorf("experiment init error, err=%v", err))
-							continue
+							return
 						}
 						experimentGroup.AddExperiment(experiment)
 					}

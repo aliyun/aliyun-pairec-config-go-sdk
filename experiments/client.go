@@ -27,6 +27,12 @@ func WithErrorLogger(l Logger) ClientOption {
 	}
 }
 
+func WithDomain(domian string) ClientOption {
+	return func(e *ExperimentClient) {
+		e.APIClient.SetDomain(domian)
+	}
+}
+
 type ExperimentClient struct {
 	// Environment control the sdk shoud get which environment data .
 	// Valid value is daily, prepub,product
@@ -60,18 +66,17 @@ func NewExperimentClient(instanceId, regionId, accessKeyId, accessKeySecret, env
 		sceneMap:    make(map[string]*model.Scene, 0),
 	}
 
+	var err error
+	client.APIClient, err = api.NewAPIClient(instanceId, regionId, accessKeyId, accessKeySecret)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, opt := range opts {
 		opt(&client)
 	}
 
 	if err := client.Validate(); err != nil {
-		return nil, err
-	}
-
-	var err error
-	//cfg := api.NewConfiguration(client.Host, client.Token)
-	client.APIClient, err = api.NewAPIClient(instanceId, regionId, accessKeyId, accessKeySecret)
-	if err != nil {
 		return nil, err
 	}
 

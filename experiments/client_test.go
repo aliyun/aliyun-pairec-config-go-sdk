@@ -15,7 +15,7 @@ func createExperimentClient(environment string) *ExperimentClient {
 	instanceId := os.Getenv("INSTANCE_ID")
 	accessId := os.Getenv("ACCESS_ID")
 	accessKey := os.Getenv("ACCESS_KEY")
-	client, err := NewExperimentClient(instanceId, region, accessId, accessKey, environment, WithLogger(LoggerFunc(log.Printf)))
+	client, err := NewExperimentClient(instanceId, region, accessId, accessKey, environment, WithLogger(LoggerFunc(log.Printf)), WithDomain("pairecservice.cn-hangzhou.aliyuncs.com"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func TestMatchExperiment2(t *testing.T) {
 }
 
 func TestGetSceneParam(t *testing.T) {
-	client := createExperimentClient(common.Environment_Prepub_Desc)
+	client := createExperimentClient(common.Environment_Daily_Desc)
 
 	param := client.GetSceneParams("homepage").GetString("version", "not exist")
 	fmt.Println(param)

@@ -1,5 +1,6 @@
 package api
 
 type ListCrowdUsersResponse struct {
-	Users []string `json:"data,omitempty"`
+	Users      []string `json:"Users,omitempty"`
+	CrowdUsers []string `json:"CrowdUsers,omitempty"`
 }

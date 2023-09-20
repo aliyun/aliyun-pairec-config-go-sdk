@@ -48,19 +48,47 @@ func TestGetSceneParam(t *testing.T) {
 	fmt.Println(param)
 }
 
-/**
 func TestGetFeatureConsistencyJob(t *testing.T) {
-	host := "http://localhost:8000"
-	client, err := NewExperimentClient(host, common.Environment_Prepub_Desc, WithLogger(LoggerFunc(log.Printf)), WithErrorLogger(LoggerFunc(log.Fatalf)))
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := createExperimentClient(common.Environment_Prepub_Desc)
 
 	jobs := client.GetSceneParams("home_feed").GetFeatureConsistencyJobs()
 	for _, job := range jobs {
 		fmt.Println(job)
 	}
 }
+func TestFeatureConsistencyBackflow(t *testing.T) {
+	client := createExperimentClient(common.Environment_Prepub_Desc)
+	backflowData := model.FeatureConsistencyBackflowData{
+		FeatureConsistencyCheckJobConfigId: "1",
+		LogUserId:                          "100000081",
+		LogItemId:                          "[\"262850386\",\"249988426\"]",
+		UserFeatures:                       "",
+		LogRequestId:                       "1130c79b-4375-4288-8b00-e575d645554f",
+		SceneName:                          "home_feed",
+	}
+	resp, err := client.BackflowFeatureConsistencyCheckJobData(&backflowData)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(resp, err)
+}
+func TestFeatureConsistencyReply(t *testing.T) {
+	client := createExperimentClient(common.Environment_Prepub_Desc)
+	replyData := model.FeatureConsistencyReplyData{
+		FeatureConsistencyCheckJobConfigId: "1",
+		LogUserId:                          "100000081",
+		LogItemId:                          "[\"262850386\",\"249988426\"]",
+		LogRequestId:                       "1130c79b-4375-4288-8b00-e575d645554f",
+		SceneName:                          "home_feed",
+	}
+	resp, err := client.SyncFeatureConsistencyCheckJobReplayLog(&replyData)
+	fmt.Println(resp, err)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+/**
 
 func TestGetFlowCtrlPlanMetaList(t *testing.T) {
 	host := "http://localhost:8000"

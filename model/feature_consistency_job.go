@@ -5,6 +5,7 @@ type FeatureConsistencyJob struct {
 	JobName                              string `json:"job_name,omitempty"`
 	SceneId                              int    `json:"scene_id"`
 	SampleRate                           int    `json:"sample_rate"`
+	ModelType                            int    `json:"model_type"`
 	FeatureBackflowQueueType             string `json:"feature_backflow_queue_type"`
 	FeatureBackflowQueueDatahubAccessId  string `json:"feature_backflow_queue_datahub_access_id,omitempty"`
 	FeatureBackflowQueueDatahubAccessKey string `json:"feature_backflow_queue_datahub_access_key,omitempty"`
@@ -14,6 +15,7 @@ type FeatureConsistencyJob struct {
 	FeatureBackflowEASVpcAddress         string `json:"feature_backflow_eas_vpc_address"`
 	FeatureBackflowEASToken              string `json:"feature_backflow_eas_token"`
 	EasModelUrl                          string `json:"eas_model_url"`
+	EasModelServiceName                  string `json:"eas_model_service_name"`
 	NeedFeatureReply                     int    `json:"need_feature_reply"`
 	FeatureReplyHost                     string `json:"feature_reply_host,omitempty"`
 	FeatureReplyToken                    string `json:"feature_reply_token,omitempty"`

@@ -4,16 +4,12 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"regexp"
 	"time"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/pairecservice"
 )
 
 var (
-	jsonCheck = regexp.MustCompile("(?i:[application|text]/json)")
-	xmlCheck  = regexp.MustCompile("(?i:[application|text]/xml)")
-
 	defaultTransport = &http.Transport{
 		DialContext: (&net.Dialer{
 			Timeout:   30 * time.Second,
@@ -55,6 +51,8 @@ type APIClient struct {
 	CrowdApi *CrowdApiService
 
 	FlowCtrlApi *FlowCtrlApiService
+
+	FeatureConsistencyCheckApi *FeatureConsistencyCheckService
 }
 
 type service struct {
@@ -86,6 +84,7 @@ func NewAPIClient(instanceId, region, accessId, accessKey string) (*APIClient, e
 	c.ParamApi = (*ParamApiService)(&c.common)
 	c.CrowdApi = (*CrowdApiService)(&c.common)
 	c.FlowCtrlApi = (*FlowCtrlApiService)(&c.common)
+	c.FeatureConsistencyCheckApi = (*FeatureConsistencyCheckService)(&c.common)
 
 	return c, nil
 }
@@ -101,3 +100,26 @@ func (c *APIClient) GetDomain() string {
 func (c *APIClient) SetDomain(domain string) {
 	c.domain = domain
 }
+
+/**
+func (c *APIClient) Init(accessId, accessKey string) error {
+	endpoint := c.GetDomain()
+	protol := "http"
+	config := &openapi.Config{
+		AccessKeyId:     &accessId,
+		AccessKeySecret: &accessKey,
+		Endpoint:        &endpoint,
+		Protocol:        &protol,
+	}
+
+	client, err := pairecserviceV2.NewClient(config)
+
+	if err != nil {
+		return err
+	}
+
+	c.v2Client = client
+	return nil
+}
+
+**/

@@ -1,5 +1,5 @@
 # aliyun-pairec-config-go-sdk
-Go sdk for PA-REC config server. Aliyun product [link](https://pairec.console.aliyun.com/v2/cn-hangzhou/instances).
+Go sdk for PA-REC config server. Aliyun product [link](https://pairec.console.aliyun.com/v2).
 
 # Installation
 

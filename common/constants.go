@@ -52,6 +52,16 @@ var (
 		Environment_Prepub:  "prepub",
 		Environment_Product: "product",
 	}
+	EnvironmentDesc2OpenApiString = map[string]string{
+		Environment_Daily_Desc:   "Daily",
+		Environment_Prepub_Desc:  "Pre",
+		Environment_Product_Desc: "Prod",
+	}
+	OpenapiEnvironment2Environment = map[string]int{
+		"Daily": Environment_Daily,
+		"Pre":   Environment_Prepub,
+		"Prod":  Environment_Product,
+	}
 )
 
 func CheckEnvironmentValue(env string) error {

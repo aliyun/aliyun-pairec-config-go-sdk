@@ -1,9 +1,7 @@
 package api
 
-import "github.com/aliyun/aliyun-pairec-config-go-sdk/model"
+import "github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 
 type ListExperimentGroupsResponse struct {
-	BaseResponse
-	Data map[string][]*model.ExperimentGroup `json:"data,omitempty"`
-	// Scene *model.Scene
+	ExperimentGroups []*model.ExperimentGroup
 }

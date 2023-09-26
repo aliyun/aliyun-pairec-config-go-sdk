@@ -1,45 +1,34 @@
 package experiments
 
 import (
-	"context"
 	"fmt"
 	"time"
 
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/api"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 	"github.com/antihax/optional"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/api"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/common"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/model"
 )
 
 // LoadSceneParamsData specifies a function to load param data from A/B Test Server
 func (e *ExperimentClient) LoadSceneParamsData() {
 	sceneParamData := make(map[string]model.SceneParams, 0)
 
-	listScenesResponse, err := e.APIClient.SceneApi.ListAllScenes(context.Background())
+	listScenesResponse, err := e.APIClient.SceneApi.ListAllScenes()
 	if err != nil {
 		e.logError(fmt.Errorf("list scenes error, err=%v", err))
 		return
 	}
 
-	if listScenesResponse.Code != common.CODE_OK {
-		e.logError(fmt.Errorf("list scenes error, requestid=%s,code=%s, msg=%s", listScenesResponse.RequestId, listScenesResponse.Code, listScenesResponse.Message))
-		return
-	}
-
-	for _, scene := range listScenesResponse.Data["scenes"] {
+	for _, scene := range listScenesResponse.Scenes {
 		sceneParams := model.NewSceneParams()
-		listParamsResponse, err := e.APIClient.ParamApi.GetParam(context.Background(), scene.SceneId,
+		listParamsResponse, err := e.APIClient.ParamApi.GetParam(scene.SceneId,
 			&api.ParamApiGetParamOpts{Environment: optional.NewString(e.Environment)})
 
 		if err != nil {
 			e.logError(fmt.Errorf("list params error, err=%v", err))
 			continue
 		}
-		if listParamsResponse.Code != common.CODE_OK {
-			e.logError(fmt.Errorf("list params error, requestid=%s,code=%s, msg=%s", listParamsResponse.RequestId, listParamsResponse.Code, listParamsResponse.Message))
-			continue
-		}
-		for _, param := range listParamsResponse.Data["params"] {
+		for _, param := range listParamsResponse.Params {
 			sceneParams.AddParam(param.ParamName, param.ParamValue)
 		}
 		sceneParamData[scene.SceneName] = sceneParams

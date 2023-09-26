@@ -2,14 +2,12 @@ package api
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"io"
-	"net/url"
-	"strings"
+	"strconv"
 
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/pairecservice"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 	"github.com/antihax/optional"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/model"
 )
 
 // Linger please
@@ -18,199 +16,6 @@ var (
 )
 
 type ExperimentGroupApiService service
-
-/*
-ExperimentGroupApiService Create a new experiment group
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param body ExperimentGroup object that needs to be added
-
-@return InlineResponse2008
-*/
-func (a *ExperimentGroupApiService) AddExperimentGroup(ctx context.Context, body model.ExperimentGroup) (Response, error) {
-	var (
-		localVarHttpMethod  = strings.ToUpper("Post")
-		localVarPostBody    interface{}
-		localVarFileName    string
-		localVarFileBytes   []byte
-		localVarReturnValue Response
-	)
-
-	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/experiment_groups"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
-	}
-
-	// body params
-	localVarPostBody = &body
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return localVarReturnValue, err
-	}
-
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, err
-	}
-
-	localVarBody, err := io.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
-	if err != nil {
-		return localVarReturnValue, err
-	}
-
-	if localVarHttpResponse.StatusCode != 200 {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			return localVarReturnValue, err
-		}
-		return localVarReturnValue, errors.New(fmt.Sprintf("Http Status code:%d", localVarHttpResponse.StatusCode))
-	} else {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			return localVarReturnValue, err
-		}
-	}
-	return localVarReturnValue, nil
-}
-
-/*
-ExperimentGroupApiService Delete ExperimentGroup By exp_group_id
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param expGroupId ExperimentGroup Id to delete
-
-@return ModelApiResponse
-*/
-func (a *ExperimentGroupApiService) DeleteExperimentGroupById(ctx context.Context, expGroupId int64) (Response, error) {
-	var (
-		localVarHttpMethod  = strings.ToUpper("Delete")
-		localVarPostBody    interface{}
-		localVarFileName    string
-		localVarFileBytes   []byte
-		localVarReturnValue Response
-	)
-
-	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/experiment_groups/{exp_group_id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"exp_group_id"+"}", fmt.Sprintf("%v", expGroupId), -1)
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
-	}
-
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return localVarReturnValue, err
-	}
-
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, err
-	}
-
-	localVarBody, err := io.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
-	if err != nil {
-		return localVarReturnValue, err
-	}
-
-	if localVarHttpResponse.StatusCode != 200 {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			return localVarReturnValue, err
-		}
-		return localVarReturnValue, errors.New(fmt.Sprintf("Http Status code:%d", localVarHttpResponse.StatusCode))
-	} else {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			return localVarReturnValue, err
-		}
-	}
-	return localVarReturnValue, nil
-}
-
-/*
-ExperimentGroupApiService Get ExperimentGroup By exp_group_id
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param expGroupId Experiment Id to get experiment data
-
-@return Response
-*/
-func (a *ExperimentGroupApiService) GetExperimentGroupById(ctx context.Context, expGroupId int64) (Response, error) {
-	var (
-		localVarHttpMethod  = strings.ToUpper("Get")
-		localVarPostBody    interface{}
-		localVarFileName    string
-		localVarFileBytes   []byte
-		localVarReturnValue Response
-	)
-
-	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/experiment_groups/{exp_group_id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"exp_group_id"+"}", fmt.Sprintf("%v", expGroupId), -1)
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
-	}
-
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return localVarReturnValue, err
-	}
-
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, err
-	}
-
-	localVarBody, err := io.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
-	if err != nil {
-		return localVarReturnValue, err
-	}
-
-	if localVarHttpResponse.StatusCode != 200 {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			return localVarReturnValue, err
-		}
-		return localVarReturnValue, errors.New(fmt.Sprintf("Http Status code:%d", localVarHttpResponse.StatusCode))
-	} else {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			return localVarReturnValue, err
-		}
-	}
-	return localVarReturnValue, nil
-}
 
 /*
  ExperimentGroupApiService list all ExperimentGroups By filter condition
@@ -225,259 +30,68 @@ type ExperimentGroupApiListExperimentGroupsOpts struct {
 	Status optional.Uint32
 }
 
-func (a *ExperimentGroupApiService) ListExperimentGroups(ctx context.Context, layerId int64, localVarOptionals *ExperimentGroupApiListExperimentGroupsOpts) (ListExperimentGroupsResponse, error) {
+func (a *ExperimentGroupApiService) ListExperimentGroups(layerId int64, localVarOptionals *ExperimentGroupApiListExperimentGroupsOpts) (ListExperimentGroupsResponse, error) {
+
+	listExperimentGroupsRequest := pairecservice.CreateListExperimentGroupsRequest()
+	listExperimentGroupsRequest.InstanceId = a.instanceId
+	listExperimentGroupsRequest.LayerId = strconv.Itoa(int(layerId))
+	if localVarOptionals.Status.Value() == common.ExpGroup_Status_Online {
+		listExperimentGroupsRequest.Status = "Online"
+	} else if localVarOptionals.Status.Value() == common.ExpGroup_Status_Offline {
+		listExperimentGroupsRequest.Status = "Offline"
+	}
+	listExperimentGroupsRequest.SetDomain(a.client.GetDomain())
 	var (
-		localVarHttpMethod  = strings.ToUpper("Get")
-		localVarPostBody    interface{}
-		localVarFileName    string
-		localVarFileBytes   []byte
 		localVarReturnValue ListExperimentGroupsResponse
 	)
 
-	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/experiment_groups/all"
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	localVarQueryParams.Add("layer_id", parameterToString(layerId, ""))
-	if localVarOptionals != nil && localVarOptionals.Status.IsSet() {
-		localVarQueryParams.Add("status", parameterToString(localVarOptionals.Status.Value(), ""))
-	}
-	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
-	}
-
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	response, err := a.client.ListExperimentGroups(listExperimentGroupsRequest)
 	if err != nil {
 		return localVarReturnValue, err
 	}
+	for _, item := range response.ExperimentGroups {
+		if id, err := strconv.Atoi(item.ExperimentGroupId); err == nil {
+			experimentGroup := model.ExperimentGroup{
+				ExpGroupId:               int64(id),
+				LayerId:                  layerId,
+				ExpGroupName:             item.Name,
+				ExpGroupInfo:             item.Description,
+				DebugUsers:               item.DebugUsers,
+				Owner:                    item.Owner,
+				Filter:                   item.Filter,
+				DistributionTimeDuration: item.DistributionTimeDuration,
+				ExpGroupConfig:           item.Config,
+				ReserveBuckets:           item.ReservedBuckets,
+			}
+			if item.DebugCrowdId != "" {
+				if crowdId, err := strconv.Atoi(item.DebugCrowdId); err == nil {
+					experimentGroup.DebugCrowdId = int64(crowdId)
+				}
+			}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, err
-	}
+			if sceneId, err := strconv.Atoi(item.SceneId); err == nil {
+				experimentGroup.SceneId = int64(sceneId)
+			}
 
-	localVarBody, err := io.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
-	if err != nil {
-		return localVarReturnValue, err
-	}
+			// exproom id
+			if laboratoryId, err := strconv.Atoi(item.LaboratoryId); err == nil {
+				experimentGroup.ExpRoomId = int64(laboratoryId)
+			}
+			if item.DistributionType == "UserId" {
+				experimentGroup.DistributionType = common.ExpGroup_Distribution_Type_User
+			} else if item.DistributionType == "TimeDuration" {
+				experimentGroup.DistributionType = common.ExpGroup_Distribution_Type_TimeDuration
+			}
 
-	if localVarHttpResponse.StatusCode != 200 {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			err = fmt.Errorf("failed to decode resp, err=%w, body=%s", err, string(localVarBody))
-			return localVarReturnValue, err
-		}
-		return localVarReturnValue, errors.New(fmt.Sprintf("Http Status code:%d", localVarHttpResponse.StatusCode))
-	} else {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			err = fmt.Errorf("failed to decode resp, err=%w, body=%s", err, string(localVarBody))
-			return localVarReturnValue, err
-		}
-	}
-	return localVarReturnValue, nil
-}
+			if item.CrowdId != "" {
+				if crowdId, err := strconv.Atoi(item.CrowdId); err == nil {
+					experimentGroup.CrowdId = int64(crowdId)
+				}
+			}
 
-/*
-ExperimentGroupApiService change the status of experiment group to offline
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param expGroupId ExperimentGroup Id to get experiment group data
-
-@return Response
-*/
-func (a *ExperimentGroupApiService) OfflineExperimentGroup(ctx context.Context, expGroupId int64) (Response, error) {
-	var (
-		localVarHttpMethod  = strings.ToUpper("Post")
-		localVarPostBody    interface{}
-		localVarFileName    string
-		localVarFileBytes   []byte
-		localVarReturnValue Response
-	)
-
-	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/experiment_groups/{exp_group_id}/offline"
-	localVarPath = strings.Replace(localVarPath, "{"+"exp_group_id"+"}", fmt.Sprintf("%v", expGroupId), -1)
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
-	}
-
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return localVarReturnValue, err
-	}
-
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, err
-	}
-
-	localVarBody, err := io.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
-	if err != nil {
-		return localVarReturnValue, err
-	}
-
-	if localVarHttpResponse.StatusCode != 200 {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			return localVarReturnValue, err
-		}
-		return localVarReturnValue, errors.New(fmt.Sprintf("Http Status code:%d", localVarHttpResponse.StatusCode))
-	} else {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			return localVarReturnValue, err
+			localVarReturnValue.ExperimentGroups = append(localVarReturnValue.ExperimentGroups, &experimentGroup)
 		}
 	}
-	return localVarReturnValue, nil
-}
 
-/*
-ExperimentGroupApiService change the status of experiment group to online
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param expGroupId ExperimentGroup Id to get experiment  group data
-
-@return Response
-*/
-func (a *ExperimentGroupApiService) OnlineExperimentGroup(ctx context.Context, expGroupId int64) (Response, error) {
-	var (
-		localVarHttpMethod  = strings.ToUpper("Post")
-		localVarPostBody    interface{}
-		localVarFileName    string
-		localVarFileBytes   []byte
-		localVarReturnValue Response
-	)
-
-	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/experiment_groups/{exp_group_id}/online"
-	localVarPath = strings.Replace(localVarPath, "{"+"exp_group_id"+"}", fmt.Sprintf("%v", expGroupId), -1)
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
-	}
-
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return localVarReturnValue, err
-	}
-
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, err
-	}
-
-	localVarBody, err := io.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
-	if err != nil {
-		return localVarReturnValue, err
-	}
-
-	if localVarHttpResponse.StatusCode != 200 {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			return localVarReturnValue, err
-		}
-		return localVarReturnValue, errors.New(fmt.Sprintf("Http Status code:%d", localVarHttpResponse.StatusCode))
-	} else {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			return localVarReturnValue, err
-		}
-	}
-	return localVarReturnValue, nil
-}
-
-/*
-ExperimentGroupApiService update experiment group  data
-  - @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
-  - @param body ExperimentGroup object that needs to be update
-  - @param expGroupId ID of experiment group to update
-
-@return Response
-*/
-func (a *ExperimentGroupApiService) UpdateExperimentGroup(ctx context.Context, body model.ExperimentGroup, expGroupId int64) (Response, error) {
-	var (
-		localVarHttpMethod  = strings.ToUpper("Post")
-		localVarPostBody    interface{}
-		localVarFileName    string
-		localVarFileBytes   []byte
-		localVarReturnValue Response
-	)
-
-	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/experiment_groups/{exp_group_id}"
-	localVarPath = strings.Replace(localVarPath, "{"+"exp_group_id"+"}", fmt.Sprintf("%v", expGroupId), -1)
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{"application/json"}
-
-	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
-	}
-
-	// body params
-	localVarPostBody = &body
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
-	if err != nil {
-		return localVarReturnValue, err
-	}
-
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, err
-	}
-
-	localVarBody, err := io.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
-	if err != nil {
-		return localVarReturnValue, err
-	}
-
-	if localVarHttpResponse.StatusCode != 200 {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			return localVarReturnValue, err
-		}
-		return localVarReturnValue, errors.New(fmt.Sprintf("Http Status code:%d", localVarHttpResponse.StatusCode))
-	} else {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			return localVarReturnValue, err
-		}
-	}
 	return localVarReturnValue, nil
 }

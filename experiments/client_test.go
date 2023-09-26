@@ -3,95 +3,32 @@ package experiments
 import (
 	"fmt"
 	"log"
-	"strconv"
+	"os"
 	"testing"
 
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/common"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/model"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 )
 
-func TestCreateExperimentClient(t *testing.T) {
-	host := "http://localhost:8080"
-	client, err := NewExperimentClient(host, common.Environment_Prepub_Desc, WithLogger(LoggerFunc(log.Printf)))
+func createExperimentClient(environment string) *ExperimentClient {
+	region := "cn-hangzhou"
+	instanceId := os.Getenv("INSTANCE_ID")
+	accessId := os.Getenv("ACCESS_ID")
+	accessKey := os.Getenv("ACCESS_KEY")
+	client, err := NewExperimentClient(instanceId, region, accessId, accessKey, environment, WithLogger(LoggerFunc(log.Printf)), WithDomain("pairecservice.cn-hangzhou.aliyuncs.com"))
 	if err != nil {
-		t.Error(err)
+		log.Fatal(err)
 	}
-	fmt.Println(client)
-}
-func TestLoadExperimentData(t *testing.T) {
-	host := "http://localhost:8080"
-	_, err := NewExperimentClient(host, common.Environment_Prepub_Desc, WithLogger(LoggerFunc(log.Printf)))
-	if err != nil {
-		t.Error(err)
-	}
-
-	// client.LoadExperimentData()
-}
-
-func TestMatchExperiment(t *testing.T) {
-	host := "http://localhost:8080"
-	client, err := NewExperimentClient(host, common.Environment_Daily_Desc, WithLogger(LoggerFunc(log.Printf)), WithErrorLogger(LoggerFunc(log.Fatalf)))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	cases := []struct {
-		Uid    string
-		Result string
-	}{}
-
-	cases = append(cases, struct {
-		Uid    string
-		Result string
-	}{Uid: strconv.Itoa(2125), Result: "base"})
-
-	cases = append(cases, struct {
-		Uid    string
-		Result string
-	}{Uid: strconv.Itoa(1000), Result: "test"})
-
-	cases = append(cases, struct {
-		Uid    string
-		Result string
-	}{Uid: strconv.Itoa(1004), Result: "base"})
-
-	for _, tc := range cases {
-		experimentContext := model.ExperimentContext{
-			RequestId: "pvid",
-			Uid:       tc.Uid,
-			FilterParams: map[string]interface{}{
-				"sex": "male",
-				//"age": 35,
-				"uid": 1,
-			},
-		}
-		experimentResult := client.MatchExperiment("test", &experimentContext)
-
-		fmt.Println(experimentResult.Info())
-		r := experimentResult.GetExperimentParams().GetString("a", "not exist")
-		if r != tc.Result {
-			t.Errorf("expect:%s, result:%s", tc.Result, r)
-		}
-	}
-
+	return client
 }
 
 func TestMatchExperiment2(t *testing.T) {
-	host := "http://1730760139076263.cn-beijing.pai-eas.aliyuncs.com/api/predict/pairec_experiment"
-	client, err := NewExperimentClient(host, common.Environment_Prepub_Desc, WithLogger(LoggerFunc(log.Printf)), WithErrorLogger(LoggerFunc(log.Fatalf)), WithToken("xxxx"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := createExperimentClient(common.Environment_Daily_Desc)
 
 	experimentContext := model.ExperimentContext{
-		RequestId: "pvid",
-		//Uid:       "211789768",
-		Uid: "102441835",
-		FilterParams: map[string]interface{}{
-			"sex": "male",
-			//"age": 35,
-			"uid": 1,
-		},
+		RequestId:    "pvid",
+		Uid:          "102441835",
+		FilterParams: map[string]interface{}{},
 	}
 
 	experimentResult := client.MatchExperiment("homepage", &experimentContext)
@@ -99,34 +36,59 @@ func TestMatchExperiment2(t *testing.T) {
 	fmt.Println(experimentResult.Info())
 	fmt.Println(experimentResult.GetExpId())
 
-	fmt.Println(experimentResult.GetLayerParams("rank").GetInt("intval", 0))
-	fmt.Println(experimentResult.GetExperimentParams().GetInt("intval", 0))
-	fmt.Println(experimentResult.GetExperimentParams().GetString("name", "not exist"))
-	fmt.Println(experimentResult.GetExperimentParams().GetString("recall", "not exist"))
+	fmt.Println(experimentResult.GetExperimentParams().GetString("version", "not exist"))
+	fmt.Println(experimentResult.GetExperimentParams().GetString("rank_version", "not exist"))
 
 }
-func TestGetSceneParam(t *testing.T) {
-	host := "http://localhost:8000"
-	client, err := NewExperimentClient(host, common.Environment_Prepub_Desc, WithLogger(LoggerFunc(log.Printf)), WithErrorLogger(LoggerFunc(log.Fatalf)))
-	if err != nil {
-		t.Fatal(err)
-	}
 
-	param := client.GetSceneParams("home_feed").GetString("_feature_consistency_job_", "not exist")
+func TestGetSceneParam(t *testing.T) {
+	client := createExperimentClient(common.Environment_Daily_Desc)
+
+	param := client.GetSceneParams("homepage").GetString("version", "not exist")
 	fmt.Println(param)
 }
+
 func TestGetFeatureConsistencyJob(t *testing.T) {
-	host := "http://localhost:8000"
-	client, err := NewExperimentClient(host, common.Environment_Prepub_Desc, WithLogger(LoggerFunc(log.Printf)), WithErrorLogger(LoggerFunc(log.Fatalf)))
-	if err != nil {
-		t.Fatal(err)
-	}
+	client := createExperimentClient(common.Environment_Prepub_Desc)
 
 	jobs := client.GetSceneParams("home_feed").GetFeatureConsistencyJobs()
 	for _, job := range jobs {
 		fmt.Println(job)
 	}
 }
+func TestFeatureConsistencyBackflow(t *testing.T) {
+	client := createExperimentClient(common.Environment_Prepub_Desc)
+	backflowData := model.FeatureConsistencyBackflowData{
+		FeatureConsistencyCheckJobConfigId: "1",
+		LogUserId:                          "100000081",
+		LogItemId:                          "[\"262850386\",\"249988426\"]",
+		UserFeatures:                       "",
+		LogRequestId:                       "1130c79b-4375-4288-8b00-e575d645554f",
+		SceneName:                          "home_feed",
+	}
+	resp, err := client.BackflowFeatureConsistencyCheckJobData(&backflowData)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(resp, err)
+}
+func TestFeatureConsistencyReply(t *testing.T) {
+	client := createExperimentClient(common.Environment_Prepub_Desc)
+	replyData := model.FeatureConsistencyReplyData{
+		FeatureConsistencyCheckJobConfigId: "1",
+		LogUserId:                          "100000081",
+		LogItemId:                          "[\"262850386\",\"249988426\"]",
+		LogRequestId:                       "1130c79b-4375-4288-8b00-e575d645554f",
+		SceneName:                          "home_feed",
+	}
+	resp, err := client.SyncFeatureConsistencyCheckJobReplayLog(&replyData)
+	fmt.Println(resp, err)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+/**
 
 func TestGetFlowCtrlPlanMetaList(t *testing.T) {
 	host := "http://localhost:8000"
@@ -196,3 +158,5 @@ func TestGetFlowCtrlPlanTargetTraffic(t *testing.T) {
 	idList := []string{"ER_ALL", "12345678", "unknown"}
 	fmt.Printf("%+v\n", client.GetFlowCtrlPlanTargetTraffic("prepub", "test", idList...))
 }
+
+**/

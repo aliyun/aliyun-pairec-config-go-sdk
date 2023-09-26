@@ -1,8 +1,7 @@
 package api
 
-import "github.com/aliyun/aliyun-pairec-config-go-sdk/model"
+import "github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 
 type ListLayersResponse struct {
-	BaseResponse
-	Data map[string][]*model.Layer `json:"data,omitempty"`
+	Layers []*model.Layer
 }

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/common"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 )
 
 // SceneParams offers Get* function to get value by the key
@@ -70,6 +70,9 @@ func (r *sceneParams) GetString(key, defaultValue string) string {
 
 	switch value := val.(type) {
 	case string:
+		if value == "" {
+			return defaultValue
+		}
 		return value
 	case int:
 		return strconv.Itoa(value)

@@ -5,13 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"hash/fnv"
-	"os"
 	"strconv"
 	"time"
 
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/api"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/common"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/model"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/api"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 )
 
 type ClientOption func(c *ExperimentClient)
@@ -27,23 +26,19 @@ func WithErrorLogger(l Logger) ClientOption {
 		e.ErrorLogger = l
 	}
 }
-func WithToken(token string) ClientOption {
+
+func WithDomain(domian string) ClientOption {
 	return func(e *ExperimentClient) {
-		e.Token = token
+		e.APIClient.SetDomain(domian)
 	}
 }
 
 type ExperimentClient struct {
-	// Host A/B Test server host
-	Host string
-	// Token the request header Authorization
-	Token string
-
 	// Environment control the sdk shoud get which environment data .
 	// Valid value is daily, prepub,product
 	Environment string
 
-	// APIClient invoke api to connect to the A/B Test Server
+	// APIClient invoke api to connect to pairecservice open api
 	APIClient *api.APIClient
 
 	//
@@ -65,11 +60,16 @@ type ExperimentClient struct {
 	ErrorLogger Logger
 }
 
-func NewExperimentClient(host, environment string, opts ...ClientOption) (*ExperimentClient, error) {
+func NewExperimentClient(instanceId, regionId, accessKeyId, accessKeySecret, environment string, opts ...ClientOption) (*ExperimentClient, error) {
 	client := ExperimentClient{
-		Host:        host,
 		Environment: environment,
 		sceneMap:    make(map[string]*model.Scene, 0),
+	}
+
+	var err error
+	client.APIClient, err = api.NewAPIClient(instanceId, regionId, accessKeyId, accessKeySecret)
+	if err != nil {
+		return nil, err
 	}
 
 	for _, opt := range opts {
@@ -80,29 +80,24 @@ func NewExperimentClient(host, environment string, opts ...ClientOption) (*Exper
 		return nil, err
 	}
 
-	cfg := api.NewConfiguration(client.Host, client.Token)
-	client.APIClient = api.NewAPIClient(cfg)
-
 	client.LoadExperimentData()
 	client.LoadSceneParamsData()
 
 	go client.loopLoadExperimentData()
 	go client.loopLoadSceneParamsData()
 
+	/**
 	if os.Getenv("CALLBACK") == "" {
 		client.LoadSceneFlowCtrlPlansData()
 		go client.loopLoadSceneFlowCtrlPlansData()
 	}
+	**/
 
 	return &client, nil
 }
 
 // Validate check the  ExperimentClient value
 func (e *ExperimentClient) Validate() error {
-	if e.Host == "" {
-		return errors.New("host is empty")
-	}
-
 	if e.Environment == "" {
 		return errors.New("environment is empty")
 	}

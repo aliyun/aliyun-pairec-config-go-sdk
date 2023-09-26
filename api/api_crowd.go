@@ -1,12 +1,10 @@
 package api
 
 import (
-	"context"
-	"errors"
-	"fmt"
-	"io/ioutil"
-	"net/url"
-	"strings"
+	"encoding/json"
+	"strconv"
+
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/pairecservice"
 )
 
 type CrowdApiService service
@@ -14,64 +12,28 @@ type CrowdApiService service
 /*
 CrowdApiService Get Crowd users By crowd ID
 Get Crowd users By crowd ID
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param sceneId Scene Id to get scene info
-@return InlineResponse2001
+
+@return ListCrowdUsersResponse
 */
-func (a *CrowdApiService) GetCrowdUsersById(ctx context.Context, crowdId int64) (ListCrowdUsersResponse, error) {
+func (a *CrowdApiService) GetCrowdUsersById(crowdId int64) (ListCrowdUsersResponse, error) {
+	listCrowdUsersRequest := pairecservice.CreateListCrowdUsersRequest()
+	listCrowdUsersRequest.InstanceId = a.instanceId
+	listCrowdUsersRequest.Domain = a.client.GetDomain()
+	listCrowdUsersRequest.CrowdId = strconv.Itoa(int(crowdId))
 	var (
-		localVarHttpMethod  = strings.ToUpper("Get")
-		localVarPostBody    interface{}
-		localVarFileName    string
-		localVarFileBytes   []byte
 		localVarReturnValue ListCrowdUsersResponse
 	)
 
-	// create path and map variables
-	localVarPath := a.client.cfg.BasePath + "/crowds/{crowd_id}/users"
-	localVarPath = strings.Replace(localVarPath, "{"+"crowd_id"+"}", fmt.Sprintf("%v", crowdId), -1)
-
-	localVarHeaderParams := make(map[string]string)
-	localVarQueryParams := url.Values{}
-	localVarFormParams := url.Values{}
-
-	// to determine the Content-Type header
-	localVarHttpContentTypes := []string{}
-
-	// set Content-Type header
-	localVarHttpContentType := selectHeaderContentType(localVarHttpContentTypes)
-	if localVarHttpContentType != "" {
-		localVarHeaderParams["Content-Type"] = localVarHttpContentType
-	}
-
-	r, err := a.client.prepareRequest(ctx, localVarPath, localVarHttpMethod, localVarPostBody, localVarHeaderParams, localVarQueryParams, localVarFormParams, localVarFileName, localVarFileBytes)
+	response, err := a.client.ListCrowdUsers(listCrowdUsersRequest)
 	if err != nil {
 		return localVarReturnValue, err
 	}
 
-	localVarHttpResponse, err := a.client.callAPI(r)
-	if err != nil || localVarHttpResponse == nil {
-		return localVarReturnValue, err
-	}
-
-	localVarBody, err := ioutil.ReadAll(localVarHttpResponse.Body)
-	localVarHttpResponse.Body.Close()
+	err = json.Unmarshal(response.GetHttpContentBytes(), &localVarReturnValue)
 	if err != nil {
 		return localVarReturnValue, err
 	}
 
-	if localVarHttpResponse.StatusCode != 200 {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			return localVarReturnValue, err
-		}
-
-		return localVarReturnValue, errors.New(fmt.Sprintf("Http Status code:%d", localVarHttpResponse.StatusCode))
-	} else {
-		err = a.client.decodeResponse(&localVarReturnValue, localVarBody)
-		if err != nil {
-			return localVarReturnValue, err
-		}
-	}
+	localVarReturnValue.Users = localVarReturnValue.CrowdUsers
 	return localVarReturnValue, nil
 }

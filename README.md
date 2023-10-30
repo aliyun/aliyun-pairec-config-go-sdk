@@ -35,8 +35,9 @@ fmt.Println(experimentResult.Info())
 // 获取匹配的实验ID
 fmt.Println(experimentResult.GetExpId())
 
-// get experiment param 
-param := experimentResult.GetExperimentParams().GetString("a", "not_exist")
+// get experiment param value
+// ab_param_name 是实验参数名称，如果命中实验，返回实验对应的配置参数，否则返回默认值
+param := experimentResult.GetExperimentParams().GetString("ab_param_name", "not_exist")
 
 if param != "not_exist" {
     // 实验逻辑

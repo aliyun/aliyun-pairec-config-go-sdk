@@ -23,7 +23,7 @@ func createExperimentClient(environment string) *ExperimentClient {
 }
 
 func TestMatchExperiment2(t *testing.T) {
-	client := createExperimentClient(common.Environment_Daily_Desc)
+	client := createExperimentClient(common.Environment_Product_Desc)
 
 	experimentContext := model.ExperimentContext{
 		RequestId:    "pvid",
@@ -31,7 +31,7 @@ func TestMatchExperiment2(t *testing.T) {
 		FilterParams: map[string]interface{}{},
 	}
 
-	experimentResult := client.MatchExperiment("homepage", &experimentContext)
+	experimentResult := client.MatchExperiment("home_feed", &experimentContext)
 
 	fmt.Println(experimentResult.Info())
 	fmt.Println(experimentResult.GetExpId())

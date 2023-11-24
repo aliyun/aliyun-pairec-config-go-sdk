@@ -173,7 +173,7 @@ func (r *ExperimentResult) Info() string {
 	}
 	info = append(info, fmt.Sprintf("exp_id=%s", r.ExpId))
 
-	return strings.Join(info, ",")
+	return strings.Join(info, "\t")
 }
 
 func (r *ExperimentResult) GetExperimentParams() LayerParams {

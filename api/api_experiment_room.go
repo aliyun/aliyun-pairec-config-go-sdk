@@ -86,9 +86,9 @@ func (a *ExperimentRoomApiService) ListExperimentRooms(environment string, local
 
 			if item.BucketType == "Filter" {
 				experimentRoom.BucketType = common.Bucket_Type_Filter
-			} else if item.BucketType == "Uid-UID" {
+			} else if item.BucketType == "Uid" {
 				experimentRoom.BucketType = common.Bucket_Type_UID
-			} else if item.BucketType == "UidHash-UID" {
+			} else if item.BucketType == "UidHash" {
 				experimentRoom.BucketType = common.Bucket_Type_UID_HASH
 			} else {
 				experimentRoom.BucketType = common.Bucket_Type_Custom

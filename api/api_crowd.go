@@ -34,6 +34,5 @@ func (a *CrowdApiService) GetCrowdUsersById(crowdId int64) (ListCrowdUsersRespon
 		return localVarReturnValue, err
 	}
 
-	localVarReturnValue.Users = localVarReturnValue.CrowdUsers
 	return localVarReturnValue, nil
 }

@@ -62,6 +62,8 @@ func (a *ExperimentGroupApiService) ListExperimentGroups(layerId int64, localVar
 				DistributionTimeDuration: item.DistributionTimeDuration,
 				ExpGroupConfig:           item.Config,
 				ReserveBuckets:           item.ReservedBuckets,
+				CrowdTargetType:          item.CrowdTargetType,
+				HoldingBuckets:           item.HoldingBuckets,
 			}
 			if item.DebugCrowdId != "" {
 				if crowdId, err := strconv.Atoi(item.DebugCrowdId); err == nil {

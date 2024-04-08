@@ -2,6 +2,8 @@ package model
 
 import (
 	"strings"
+
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 )
 
 type ExperimentGroup struct {
@@ -21,6 +23,8 @@ type ExperimentGroup struct {
 	ExpGroupConfig           string `json:"exp_group_config,omitempty"`
 	ReserveBuckets           string `json:"reserve_buckets,omitempty"`
 	Status                   int32  `json:"status,omitempty"`
+	CrowdTargetType          string `json:"crowd_target_type,omitempty"`
+	HoldingBuckets           string `json:"holding_buckets,omitempty"`
 
 	Experiments     []*Experiment   `json:"experiments"`
 	debugUserMap    map[string]bool `json:"-"`
@@ -31,13 +35,43 @@ type ExperimentGroup struct {
 }
 
 func (e *ExperimentGroup) Init() error {
-	if e.Filter != "" {
-		diversionBucket, err := NewFilterDiversionBucket(e.Filter)
-		if err != nil {
-			return err
+	if e.CrowdTargetType == "" {
+		if e.Filter != "" {
+			diversionBucket, err := NewFilterDiversionBucket(e.Filter)
+			if err != nil {
+				return err
+			}
+
+			e.diversionBucket = diversionBucket
 		}
 
-		e.diversionBucket = diversionBucket
+		e.crowdUserMap = make(map[string]struct{}, len(e.CrowdUsers))
+		for _, uidstr := range e.CrowdUsers {
+			for _, uid := range strings.Split(uidstr, ",") {
+				e.crowdUserMap[strings.TrimSpace(uid)] = struct{}{}
+			}
+		}
+	} else {
+		switch e.CrowdTargetType {
+		case common.CrowdTargetType_CrowdId:
+			e.crowdUserMap = make(map[string]struct{}, len(e.CrowdUsers))
+			for _, uidstr := range e.CrowdUsers {
+				for _, uid := range strings.Split(uidstr, ",") {
+					e.crowdUserMap[strings.TrimSpace(uid)] = struct{}{}
+				}
+			}
+		case common.CrowdTargetType_Filter:
+			if e.Filter != "" {
+				diversionBucket, err := NewFilterDiversionBucket(e.Filter)
+				if err != nil {
+					return err
+				}
+
+				e.diversionBucket = diversionBucket
+			}
+		case common.CrowdTargetType_Random:
+			e.diversionBucket = NewUidDiversionBucket(100, e.HoldingBuckets)
+		}
 	}
 	// deal DebugUsers
 	e.debugUserMap = make(map[string]bool, 0)
@@ -53,36 +87,60 @@ func (e *ExperimentGroup) Init() error {
 		}
 	}
 
-	e.crowdUserMap = make(map[string]struct{}, len(e.CrowdUsers))
-	for _, uid := range e.CrowdUsers {
-		e.crowdUserMap[uid] = struct{}{}
-	}
-
 	return nil
 }
 func (e *ExperimentGroup) AddExperiment(experiment *Experiment) {
 	e.Experiments = append(e.Experiments, experiment)
 }
 
-func (e *ExperimentGroup) Match(experimentContext *ExperimentContext) bool {
-
-	if e.DebugUsers == "" && e.Filter == "" && e.CrowdId == 0 {
-		return true
-	}
-
-	if e.Filter == "" && e.CrowdId != 0 {
-		if _, found := e.crowdUserMap[experimentContext.Uid]; found {
-			return true
-		}
-	}
-
+// MatchDebugUsers return true if debug_users is set and debug_users contain of uid
+func (e *ExperimentGroup) MatchDebugUsers(experimentContext *ExperimentContext) bool {
 	if _, found := e.debugUserMap[experimentContext.Uid]; found {
 		return true
 	}
 
-	if e.diversionBucket != nil {
-		return e.diversionBucket.Match(experimentContext)
+	return false
+}
+
+func (e *ExperimentGroup) Match(experimentContext *ExperimentContext) bool {
+	// Backward compatible with legacy logic
+	if e.CrowdTargetType == "" {
+		if e.Filter == "" && e.CrowdId == 0 {
+			return true
+		}
+
+		if e.Filter == "" && e.CrowdId != 0 {
+			if _, found := e.crowdUserMap[experimentContext.Uid]; found {
+				return true
+			}
+		}
+
+		if e.diversionBucket != nil {
+			return e.diversionBucket.Match(experimentContext)
+		}
+
+		return false
+
+	} else {
+		switch e.CrowdTargetType {
+		case common.CrowdTargetType_ALL:
+			return true
+		case common.CrowdTargetType_Filter:
+			if e.diversionBucket != nil {
+				return e.diversionBucket.Match(experimentContext)
+			}
+		case common.CrowdTargetType_CrowdId:
+			if _, found := e.crowdUserMap[experimentContext.Uid]; found {
+				return true
+			}
+		case common.CrowdTargetType_Random:
+			if e.diversionBucket != nil {
+				return e.diversionBucket.Match(experimentContext)
+			}
+
+		}
+
+		return false
 	}
 
-	return false
 }

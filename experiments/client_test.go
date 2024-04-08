@@ -22,13 +22,15 @@ func createExperimentClient(environment string) *ExperimentClient {
 	return client
 }
 
-func TestMatchExperiment2(t *testing.T) {
+func TestMatchExperiment(t *testing.T) {
 	client := createExperimentClient(common.Environment_Product_Desc)
 
 	experimentContext := model.ExperimentContext{
-		RequestId:    "pvid",
-		Uid:          "102441835",
-		FilterParams: map[string]interface{}{},
+		RequestId: "pvid",
+		Uid:       "1034416392",
+		FilterParams: map[string]interface{}{
+			"country": "new12",
+		},
 	}
 
 	experimentResult := client.MatchExperiment("home_feed", &experimentContext)

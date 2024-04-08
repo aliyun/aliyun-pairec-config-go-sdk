@@ -78,3 +78,10 @@ func CheckEnvironmentValue(env string) error {
 	}
 	return nil
 }
+
+const (
+	CrowdTargetType_ALL     = "All"
+	CrowdTargetType_Filter  = "Filter"
+	CrowdTargetType_CrowdId = "CrowdId"
+	CrowdTargetType_Random  = "Random"
+)

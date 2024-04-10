@@ -27,7 +27,7 @@ func TestMatchExperiment(t *testing.T) {
 
 	experimentContext := model.ExperimentContext{
 		RequestId: "pvid",
-		Uid:       "1034416392",
+		Uid:       "1034416388",
 		FilterParams: map[string]interface{}{
 			"country": "new12",
 		},

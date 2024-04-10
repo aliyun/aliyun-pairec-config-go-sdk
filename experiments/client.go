@@ -122,14 +122,30 @@ func (e *ExperimentClient) MatchExperiment(sceneName string, experimentContext *
 	experimentResult := model.NewExperimentResult(sceneName, experimentContext)
 	var defaultExperimentRoom *model.ExperimentRoom
 	var matchExperimentRoom *model.ExperimentRoom
+	// first find base experiment room
 	for _, experimentRoom := range scene.ExperimentRooms {
 		if experimentRoom.Type == common.ExpRoom_Type_Base {
 			defaultExperimentRoom = experimentRoom
-		} else if experimentRoom.MatchDebugUsers(experimentContext) {
+			break
+		}
+	}
+	// if experiment room has debug users then matchExperimentRoom
+	for _, experimentRoom := range scene.ExperimentRooms {
+		if experimentRoom.MatchDebugUsers(experimentContext) {
 			matchExperimentRoom = experimentRoom
 			break
-		} else if experimentRoom.Match(experimentContext) {
-			matchExperimentRoom = experimentRoom
+		}
+	}
+	// if matchExperimentRoom is null, so no debug users found
+	// then find no base experiment room is match
+	if matchExperimentRoom == nil {
+		for _, experimentRoom := range scene.ExperimentRooms {
+			if experimentRoom.Type != common.ExpRoom_Type_Base {
+				if experimentRoom.Match(experimentContext) {
+					matchExperimentRoom = experimentRoom
+					break
+				}
+			}
 		}
 	}
 

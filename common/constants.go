@@ -44,6 +44,18 @@ const (
 
 	CODE_OK                            = "OK"
 	Feature_Consistency_Job_Param_Name = "_feature_consistency_job_"
+
+	FlowCtrlPlan_NotRunning_Status = "NotRunning"
+	FlowCtrlPlan_Running_Status    = "Running"
+	FlowCtrlPlan_Ready_Status      = "Ready"
+	FlowCtrlPlan_Finished_Status   = "Finished"
+
+	Version_Latest   = "Latest"
+	Version_Released = "Released"
+
+	ControlTargetFilter_All   = "ALL"
+	ControlTargetFilter_Vaild = "Valid"
+	ControlTargetFilter_None  = "None"
 )
 
 var (

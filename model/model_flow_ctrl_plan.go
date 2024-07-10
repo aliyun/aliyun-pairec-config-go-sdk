@@ -1,53 +1,65 @@
 package model
 
-import "time"
+import "github.com/aliyun/alibaba-cloud-sdk-go/services/pairecservice"
 
-type FlowCtrlPlan struct {
-	PlanId                        int                   `json:"plan_id"`
-	SceneId                       int                   `json:"scene_id"`
-	SceneName                     string                `json:"scene_name"`
-	PlanName                      string                `json:"plan_name"`
-	PlanDesc                      string                `json:"plan_desc"`
-	OnlineDatasourceType          string                `json:"online_datasource_type"`
-	OnlineDatasourceId            int                   `json:"online_datasource_id"`
-	OnlineTableName               string                `json:"online_table_name"`
-	OnlineTableItemIdField        string                `json:"online_table_item_id_field"`
-	PlanScopeFilter               string                `json:"plan_scope_filter"`
-	PlanScopeFilterJson           string                `json:"plan_scope_filter_json"`
-	TargetValueInPercentageFormat bool                  `json:"target_value_in_percentage_format"`
-	PlanType                      string                `json:"plan_type"`
-	Granularity                   string                `json:"granularity"`
-	RealtimeLogType               string                `json:"realtime_log_type"`
-	RealtimeLogTableMetaId        int                   `json:"realtime_log_table_meta_id"`
-	RealtimeLogFilter             string                `json:"RealtimeLogFilter"`
-	RealtimeLogFilterJson         string                `json:"realtime_log_filter_json"`
-	FlowScopeFilterJson           string                `json:"flow_scope_filter_json"`
-	LoadTrafficByPlan             bool                  `json:"load_traffic_by_plan"`
-	StartTime                     time.Time             `json:"start_time"`
-	EndTime                       time.Time             `json:"end_time"`
-	Status                        string                `json:"status"`
-	CreateTime                    time.Time             `json:"create_time"`
-	Targets                       []FlowCtrlPlanTargets `json:"targets"`
+type TrafficControlTasksItem struct {
+	TrafficControlTaskId string `json:"TrafficControlTaskId" xml:"TrafficControlTaskId"`
+	Name                 string `json:"Name" xml:"Name"`
+	Description          string `json:"Description" xml:"Description"`
+	SceneId              string `json:"SceneId" xml:"SceneId"`
+	SceneName            string `json:"SceneName" xml:"SceneName"`
+	ProductStatus        string `json:"ProductStatus" xml:"ProductStatus"`
+	PrepubStatus         string `json:"PrepubStatus" xml:"PrepubStatus"`
+	ExecutionTime        string `json:"ExecutionTime" xml:"ExecutionTime"`
+	StartTime            string `json:"StartTime" xml:"StartTime"`
+	EndTime              string `json:"EndTime" xml:"EndTime"`
+
+	BehaviorTableMetaId string `json:"BehaviorTableMetaId" xml:"BehaviorTableMetaId"`
+	UserTableMetaId     string `json:"UserTableMetaId" xml:"UserTableMetaId"`
+	ItemTableMetaId     string `json:"ItemTableMetaId" xml:"ItemTableMetaId"`
+
+	BehaviorTableMeta *pairecservice.TableMetasItem `json:"BehaviorTableMeta"`
+	UserTableMeta     *pairecservice.TableMetasItem `json:"UserTableMeta"`
+	ItemTableMeta     *pairecservice.TableMetasItem `json:"ItemTableMeta"`
+
+	UserConditionType              string                      `json:"UserConditionType" xml:"UserConditionType"`
+	UserConditionArray             string                      `json:"UserConditionArray" xml:"UserConditionArray"`
+	UserConditionExpress           string                      `json:"UserConditionExpress" xml:"UserConditionExpress"`
+	StatisBehaviorConditionType    string                      `json:"StatisBehaviorConditionType" xml:"StatisBehaviorConditionType"`
+	StatisBehaviorConditionArray   string                      `json:"StatisBehaviorConditionArray" xml:"StatisBehaviorConditionArray"`
+	StatisBahaviorConditionExpress string                      `json:"StatisBahaviorConditionExpress" xml:"StatisBahaviorConditionExpress"`
+	ControlType                    string                      `json:"ControlType" xml:"ControlType"`
+	ControlGranularity             string                      `json:"ControlGranularity" xml:"ControlGranularity"`
+	ControlLogic                   string                      `json:"ControlLogic" xml:"ControlLogic"`
+	ItemConditionType              string                      `json:"ItemConditionType" xml:"ItemConditionType"`
+	ItemConditionArray             string                      `json:"ItemConditionArray" xml:"ItemConditionArray"`
+	ItemConditionExpress           string                      `json:"ItemConditionExpress" xml:"ItemConditionExpress"`
+	GmtCreateTime                  string                      `json:"GmtCreateTime" xml:"GmtCreateTime"`
+	GmtModifiedTime                string                      `json:"GmtModifiedTime" xml:"GmtModifiedTime"`
+	EverPublished                  bool                        `json:"EverPublished" xml:"EverPublished"`
+	TrafficControlTargets          []TrafficControlTargetsItem `json:"TrafficControlTargets" xml:"TrafficControlTargets"`
 }
 
-type FlowCtrlPlanTargets struct {
-	TargetId              int                `json:"target_id"`
-	PlanId                int                `json:"planId"`
-	TargetName            string             `json:"target_name"`
-	TargetType            int                `json:"target_type"`
-	TargetScopeFilter     string             `json:"target_scope_filter"`
-	TargetScopeFilterJson string             `json:"target_scope_filter_json"`
-	ItemScopeFilterJson   string             `json:"item_scope_filter_json"`
-	TimeUint              string             `json:"time_uint"`
-	SetPoint              float64            `json:"set_point"`
-	SetPointRange         float64            `json:"set_point_range"`
-	DoRecall              bool               `json:"do_recall"`
-	Status                string             `json:"status"`
-	StartTime             time.Time          `json:"start_time"`
-	EndTime               time.Time          `json:"end_time"`
-	CreateTime            time.Time          `json:"create_time"`
-	TargetTraffics        map[string]float64 `json:"target_traffics"`
-	PlanTraffic           map[string]float64 `json:"plan_traffics"`
-	TimePoints            []int              `json:"time_points"`
-	SetPoints             []float64          `json:"set_points"`
+type TrafficControlTargetsItem struct {
+	TrafficControlTaskId   string                                          `json:"TrafficControlTaskId" xml:"TrafficControlTaskId"`
+	Name                   string                                          `json:"Name" xml:"Name"`
+	Event                  string                                          `json:"Event" xml:"Event"`
+	GmtModifiedTime        string                                          `json:"GmtModifiedTime" xml:"GmtModifiedTime"`
+	ToleranceValue         int64                                           `json:"ToleranceValue" xml:"ToleranceValue"`
+	Value                  float64                                         `json:"Value" xml:"Value"`
+	TrafficControlTargetId string                                          `json:"TrafficControlTargetId" xml:"TrafficControlTargetId"`
+	ItemConditionType      string                                          `json:"ItemConditionType" xml:"ItemConditionType"`
+	StartTime              string                                          `json:"StartTime" xml:"StartTime"`
+	GmtCreateTime          string                                          `json:"GmtCreateTime" xml:"GmtCreateTime"`
+	EndTime                string                                          `json:"EndTime" xml:"EndTime"`
+	StatisPeriod           string                                          `json:"StatisPeriod" xml:"StatisPeriod"`
+	NewProductRegulation   bool                                            `json:"NewProductRegulation" xml:"NewProductRegulation"`
+	ItemConditionArray     string                                          `json:"ItemConditionArray" xml:"ItemConditionArray"`
+	Status                 string                                          `json:"Status" xml:"Status"`
+	RecallName             string                                          `json:"RecallName" xml:"RecallName"`
+	ItemConditionExpress   string                                          `json:"ItemConditionExpress" xml:"ItemConditionExpress"`
+	SplitParts             pairecservice.SplitPartsInGetTrafficControlTask `json:"SplitParts" xml:"SplitParts"`
+
+	PlanTraffic    map[string]float64 `json:"plan_traffics"`
+	TargetTraffics map[string]float64 `json:"target_traffics"`
 }

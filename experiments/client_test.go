@@ -15,7 +15,11 @@ func createExperimentClient(environment string) *ExperimentClient {
 	instanceId := os.Getenv("INSTANCE_ID")
 	accessId := os.Getenv("ACCESS_ID")
 	accessKey := os.Getenv("ACCESS_KEY")
-	client, err := NewExperimentClient(instanceId, region, accessId, accessKey, environment, WithLogger(LoggerFunc(log.Printf)), WithDomain("pairecservice.cn-hangzhou.aliyuncs.com"))
+	//address := "pairecservice.cn-hangzhou.aliyuncs.com"
+	//preAddress :=
+	client, err := NewExperimentClient(instanceId, region, accessId, accessKey, environment,
+		WithLogger(LoggerFunc(log.Printf)),
+		WithDomain("pairecservice-pre.cn-hangzhou.aliyuncs.com"))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,6 +62,7 @@ func TestGetFeatureConsistencyJob(t *testing.T) {
 		fmt.Println(job)
 	}
 }
+
 func TestFeatureConsistencyBackflow(t *testing.T) {
 	client := createExperimentClient(common.Environment_Prepub_Desc)
 	backflowData := model.FeatureConsistencyBackflowData{
@@ -74,6 +79,7 @@ func TestFeatureConsistencyBackflow(t *testing.T) {
 	}
 	fmt.Println(resp, err)
 }
+
 func TestFeatureConsistencyReply(t *testing.T) {
 	client := createExperimentClient(common.Environment_Prepub_Desc)
 	replyData := model.FeatureConsistencyReplyData{
@@ -90,28 +96,19 @@ func TestFeatureConsistencyReply(t *testing.T) {
 	}
 }
 
-/**
+// /**
 
 func TestGetFlowCtrlPlanMetaList(t *testing.T) {
-	host := "http://localhost:8000"
-	client, err := NewExperimentClient(host, common.Environment_Prepub_Desc, WithLogger(LoggerFunc(log.Printf)), WithErrorLogger(LoggerFunc(log.Fatalf)))
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	client := createExperimentClient(common.Environment_Prepub_Desc)
 	plans := client.GetFlowCtrlPlanMetaList("prepub", 0)
+	fmt.Println("-----------")
 	for _, plan := range plans {
 		fmt.Printf("%++v", plan)
 	}
 }
 
 func TestGetFlowCtrlPlanTargetList(t *testing.T) {
-	host := "http://localhost:8000"
-	client, err := NewExperimentClient(host, common.Environment_Prepub_Desc, WithLogger(LoggerFunc(log.Printf)), WithErrorLogger(LoggerFunc(log.Fatalf)))
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	client := createExperimentClient(common.Environment_Prepub_Desc)
 	targets := client.GetFlowCtrlPlanTargetList("prepub", "", 0)
 	for planId, target := range targets {
 		fmt.Printf("%d %+v", planId, target)
@@ -119,23 +116,13 @@ func TestGetFlowCtrlPlanTargetList(t *testing.T) {
 }
 
 func TestCheckIfFlowCtrlPlanIsEnabled(t *testing.T) {
-	host := "http://localhost:8000"
-	client, err := NewExperimentClient(host, common.Environment_Prepub_Desc, WithLogger(LoggerFunc(log.Printf)), WithErrorLogger(LoggerFunc(log.Fatalf)))
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	client := createExperimentClient(common.Environment_Prepub_Desc)
 	enabled := client.CheckIfFlowCtrlPlanTargetIsEnabled("prepub", 9, 0)
 	fmt.Println(enabled)
 }
 
 func TestCheckExperimentRoomDebugUsers(t *testing.T) {
-	host := "http://localhost:8080"
-	client, err := NewExperimentClient(host, common.Environment_Daily_Desc, WithLogger(LoggerFunc(log.Printf)))
-	if err != nil {
-		t.Error(err)
-	}
-
+	client := createExperimentClient(common.Environment_Prepub_Desc)
 	client.LoadExperimentData()
 	sceneMap := client.sceneMap
 	for _, scene := range sceneMap {
@@ -149,16 +136,11 @@ func TestCheckExperimentRoomDebugUsers(t *testing.T) {
 }
 
 func TestGetFlowCtrlPlanTargetTraffic(t *testing.T) {
-	host := "http://localhost:8000"
-	client, err := NewExperimentClient(host, common.Environment_Prepub_Desc, WithLogger(LoggerFunc(log.Printf)), WithErrorLogger(LoggerFunc(log.Fatalf)))
-	if err != nil {
-		t.Fatal(err)
-	}
-
+	client := createExperimentClient(common.Environment_Prepub_Desc)
 	fmt.Println(client.GetFlowCtrlPlanTargetList("prepub", "test", 0))
 
 	idList := []string{"ER_ALL", "12345678", "unknown"}
 	fmt.Printf("%+v\n", client.GetFlowCtrlPlanTargetTraffic("prepub", "test", idList...))
 }
 
-**/
+// **/

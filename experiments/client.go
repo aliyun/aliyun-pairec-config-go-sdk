@@ -48,10 +48,10 @@ type ExperimentClient struct {
 	sceneParamData map[string]model.SceneParams
 
 	// sceneFlowCtrlPlanData map of flow ctrl plan of scene name
-	sceneFlowCtrlPlanData map[string][]model.FlowCtrlPlan
+	sceneFlowCtrlPlanData map[string][]model.TrafficControlTasksItem
 
 	// prepubSceneFlowCtrlPlanData map of flow ctrl plan of scene name (prepub env)
-	prepubSceneFlowCtrlPlanData map[string][]model.FlowCtrlPlan
+	prepubSceneFlowCtrlPlanData map[string][]model.TrafficControlTasksItem
 
 	// Logger specifies a logger used to report internal changes within the writer
 	Logger Logger
@@ -86,12 +86,10 @@ func NewExperimentClient(instanceId, regionId, accessKeyId, accessKeySecret, env
 	go client.loopLoadExperimentData()
 	go client.loopLoadSceneParamsData()
 
-	/**
-	if os.Getenv("CALLBACK") == "" {
-		client.LoadSceneFlowCtrlPlansData()
-		go client.loopLoadSceneFlowCtrlPlansData()
-	}
-	**/
+	//if os.Getenv("CALLBACK") == "" {
+	client.LoadSceneFlowCtrlPlansData()
+	go client.loopLoadSceneFlowCtrlPlansData()
+	//}
 
 	return &client, nil
 }

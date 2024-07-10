@@ -1,57 +1,73 @@
 package experiments
 
 import (
+	"fmt"
+	"strconv"
 	"time"
 
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/api"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
+	"github.com/antihax/optional"
 )
 
-/**
-// LoadSceneFlowCtrlPlansData specifies a function to load flow ctrl plan data from A/B Test Server
 func (e *ExperimentClient) LoadSceneFlowCtrlPlansData() {
-	sceneFlowCtrlPlanData := make(map[string][]model.FlowCtrlPlan, 0)
-
-	opt := &api.FlowCtrlApiListFlowCtrlPlansOpts{}
-	opt.Env = optional.NewString("product")
-
-	listPlansResponse, err := e.APIClient.FlowCtrlApi.ListFlowCtrlPlans(context.Background(), opt)
+	//Load traffic control data for the production environment
+	prodSceneFlowCtrlPlanData := make(map[string][]model.TrafficControlTasksItem, 0)
+	prodOpt := &api.FlowCtrlApiListFlowCtrlPlansOpts{
+		ALL:                 optional.NewBool(true),
+		ControlTargetFilter: optional.NewString("Valid"),
+		Env:                 optional.NewString("product"),
+		Status:              optional.NewString("Running"),
+		Version:             optional.NewString("Released"),
+	}
+	prodResponse, err := e.APIClient.FlowCtrlApi.ListFlowCtrlPlans(prodOpt)
 	if err != nil {
 		e.logError(fmt.Errorf("list flow plans error, err=%v", err))
 		return
 	}
 
-	if listPlansResponse.Code != common.CODE_OK {
-		e.logError(fmt.Errorf("list flow plans error, requestid=%s,code=%s, msg=%s", listPlansResponse.RequestId, listPlansResponse.Code, listPlansResponse.Message))
+	if prodResponse.Code != common.CODE_OK {
+		e.logError(fmt.Errorf("list flow plans error, requestid=%s,code=%s, msg=%s", prodResponse.RequestId, prodResponse.Code, prodResponse.Message))
 		return
 	}
 
-	for _, plan := range listPlansResponse.Data.Plans {
-		sceneFlowCtrlPlanData[plan.SceneName] = append(sceneFlowCtrlPlanData[plan.SceneName], plan)
-	}
-	if len(sceneFlowCtrlPlanData) > 0 {
-		e.sceneFlowCtrlPlanData = sceneFlowCtrlPlanData
+	for _, plan := range prodResponse.Data.TrafficControlTasks {
+		prodSceneFlowCtrlPlanData[plan.SceneName] = append(prodSceneFlowCtrlPlanData[plan.SceneName], plan)
 	}
 
-	prepubSceneFlowCtrlPlanData := make(map[string][]model.FlowCtrlPlan, 0)
-	opt.Env = optional.NewString("prepub")
+	if len(prodSceneFlowCtrlPlanData) > 0 {
+		e.sceneFlowCtrlPlanData = prodSceneFlowCtrlPlanData
+	}
 
-	listPlansResponse, err = e.APIClient.FlowCtrlApi.ListFlowCtrlPlans(context.Background(), opt)
+	// Load traffic control data for the pre-load environment
+	prepubSceneFlowCtrlPlanData := make(map[string][]model.TrafficControlTasksItem, 0)
+	prePubOpt := &api.FlowCtrlApiListFlowCtrlPlansOpts{
+		ALL:                 optional.NewBool(true),
+		ControlTargetFilter: optional.NewString("Vaild"),
+		Env:                 optional.NewString("prepub"),
+		Status:              optional.NewString("Running"),
+		Version:             optional.NewString("Released"),
+	}
+	prePubResponse, _ := e.APIClient.FlowCtrlApi.ListFlowCtrlPlans(prePubOpt)
 	if err != nil {
-		e.logError(fmt.Errorf("list flow plans error, err=%v", err))
+		e.logError(fmt.Errorf("list flow plans error,error=%v", err))
 		return
 	}
 
-	if listPlansResponse.Code != common.CODE_OK {
-		e.logError(fmt.Errorf("list flow plans error, requestid=%s,code=%s, msg=%s", listPlansResponse.RequestId, listPlansResponse.Code, listPlansResponse.Message))
+	if prePubResponse.Code != common.CODE_OK {
+		e.logError(fmt.Errorf("list flow plans error, requested=%s, code=%s, msg=%s", prePubResponse.RequestId, prePubResponse.Code, prePubResponse.Message))
 		return
 	}
 
-	for _, plan := range listPlansResponse.Data.Plans {
+	for _, plan := range prePubResponse.Data.TrafficControlTasks {
 		prepubSceneFlowCtrlPlanData[plan.SceneName] = append(prepubSceneFlowCtrlPlanData[plan.SceneName], plan)
 	}
+
 	if len(prepubSceneFlowCtrlPlanData) > 0 {
 		e.prepubSceneFlowCtrlPlanData = prepubSceneFlowCtrlPlanData
 	}
+
 }
 
 // loopLoadSceneFlowCtrlPlansData async loop invoke LoadSceneFlowCtrlPlansData function
@@ -62,14 +78,13 @@ func (e *ExperimentClient) loopLoadSceneFlowCtrlPlansData() {
 		e.LoadSceneFlowCtrlPlansData()
 	}
 }
-**/
 
-func (e *ExperimentClient) GetFlowCtrlPlanTargetList(env, sceneName string, currentTimestamp int64) map[int]model.FlowCtrlPlanTargets {
+func (e *ExperimentClient) GetFlowCtrlPlanTargetList(env, sceneName string, currentTimestamp int64) map[int]model.TrafficControlTargetsItem {
 	if currentTimestamp == 0 {
 		currentTimestamp = time.Now().Unix()
 	}
 
-	targetsMap := make(map[int]model.FlowCtrlPlanTargets)
+	targetsMap := make(map[int]model.TrafficControlTargetsItem)
 
 	data := e.sceneFlowCtrlPlanData
 	if env == "prepub" {
@@ -82,9 +97,13 @@ func (e *ExperimentClient) GetFlowCtrlPlanTargetList(env, sceneName string, curr
 		}
 
 		for _, plan := range scenePlans {
-			for i, target := range plan.Targets {
-				if target.Status == "enable" && target.StartTime.Unix() < currentTimestamp && currentTimestamp <= target.EndTime.Unix() {
-					targetsMap[target.TargetId] = plan.Targets[i]
+			for i, target := range plan.TrafficControlTargets {
+				startTime, _ := time.Parse("2024-07-09 13:41:15", target.StartTime)
+				endTime, _ := time.Parse("2024-07-09 13:41:15", target.EndTime)
+
+				if target.Status == "Opened" && startTime.Unix() < currentTimestamp && currentTimestamp <= endTime.Unix() {
+					tid, _ := strconv.Atoi(target.TrafficControlTargetId)
+					targetsMap[tid] = plan.TrafficControlTargets[i]
 				}
 			}
 		}
@@ -93,12 +112,12 @@ func (e *ExperimentClient) GetFlowCtrlPlanTargetList(env, sceneName string, curr
 	return targetsMap
 }
 
-func (e *ExperimentClient) GetFlowCtrlPlanMetaList(env string, currentTimestamp int64) []model.FlowCtrlPlan {
+func (e *ExperimentClient) GetFlowCtrlPlanMetaList(env string, currentTimestamp int64) []model.TrafficControlTasksItem {
 	if currentTimestamp == 0 {
 		currentTimestamp = time.Now().Unix()
 	}
 
-	plans := make([]model.FlowCtrlPlan, 0)
+	plans := make([]model.TrafficControlTasksItem, 0)
 
 	data := e.sceneFlowCtrlPlanData
 	if env == "prepub" {
@@ -107,7 +126,10 @@ func (e *ExperimentClient) GetFlowCtrlPlanMetaList(env string, currentTimestamp 
 
 	for _, scenePlans := range data {
 		for i, plan := range scenePlans {
-			if plan.Status == "enable" && plan.StartTime.Unix() <= currentTimestamp && currentTimestamp < plan.EndTime.Unix() {
+			startTime, _ := time.Parse("2024-07-09 13:41:15", plan.StartTime)
+			endTime, _ := time.Parse("2024-07-09 13:41:15", plan.EndTime)
+
+			if plan.ProductStatus == "Opened" && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
 				plans = append(plans, scenePlans[i])
 			}
 		}
@@ -127,9 +149,16 @@ func (e *ExperimentClient) CheckIfFlowCtrlPlanTargetIsEnabled(env string, target
 
 	for _, scenePlans := range data {
 		for _, plan := range scenePlans {
-			for _, target := range plan.Targets {
-				if target.TargetId == targetId {
-					if target.Status == "enable" && target.StartTime.Unix() < currentTimestamp && currentTimestamp < target.EndTime.Unix() {
+			for _, target := range plan.TrafficControlTargets {
+				tid, err := strconv.Atoi(target.TrafficControlTargetId)
+				if err != nil {
+					fmt.Errorf("traffic control targetId is illegal")
+				}
+				if tid == targetId {
+					startTime, _ := time.Parse("2024-07-09 13:41:15", target.StartTime)
+					endTime, _ := time.Parse("2024-07-09 13:41:15", target.EndTime)
+
+					if target.Status == "Opened" && startTime.Unix() < currentTimestamp && currentTimestamp < endTime.Unix() {
 						return true
 					}
 				}
@@ -141,8 +170,8 @@ func (e *ExperimentClient) CheckIfFlowCtrlPlanTargetIsEnabled(env string, target
 
 type FlowCtrlPlanTargetTraffic struct {
 	ItemOrExpId   string  `json:"item_or_exp_id"`
-	PlanId        int     `json:"plan_id"`
-	TargetId      int     `json:"target_id"`
+	PlanId        string  `json:"plan_id"`
+	TargetId      string  `json:"target_id"`
 	TargetTraffic float64 `json:"target_traffic"`
 	PlanTraffic   float64 `json:"plan_traffic"`
 }
@@ -162,8 +191,8 @@ func (e *ExperimentClient) GetFlowCtrlPlanTargetTraffic(env, sceneName string, i
 			if len(idList) == 0 || idMap[id] {
 				traffics = append(traffics, FlowCtrlPlanTargetTraffic{
 					ItemOrExpId:   id,
-					PlanId:        planTarget.PlanId,
-					TargetId:      planTarget.TargetId,
+					PlanId:        planTarget.TrafficControlTaskId,
+					TargetId:      planTarget.TrafficControlTargetId,
 					TargetTraffic: value,
 					PlanTraffic:   planTarget.PlanTraffic[id],
 				})

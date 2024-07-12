@@ -26,7 +26,7 @@ FlowCtrlApiService 获取流控计划列表
 @return ListFlowCtrlPlansResponse
 */
 
-type FlowCtrlApiListFlowCtrlPlansOpts struct {
+type TrafficControlApiListTrafficControlTasksOpts struct {
 	Name                 optional.String
 	TrafficControlTaskId optional.String
 	SceneId              optional.Int32
@@ -41,50 +41,51 @@ type FlowCtrlApiListFlowCtrlPlansOpts struct {
 	ALL                  optional.Bool
 }
 
-func (fca *FlowCtrlApiService) ListFlowCtrlPlans(localVarOptionals *FlowCtrlApiListFlowCtrlPlansOpts) (ListFlowCtrlPlansResponse, error) {
-	listFlowCtrlRequest := pairecservice.CreateListTrafficControlTasksRequest()
+func (fca *FlowCtrlApiService) ListTrafficControlTasks(localVarOptionals *TrafficControlApiListTrafficControlTasksOpts) (ListTrafficControlTasksResponse, error) {
+	listTrafficControlRequest := pairecservice.CreateListTrafficControlTasksRequest()
 	//listFlowCtrlRequest.
-	listFlowCtrlRequest.InstanceId = fca.instanceId
+	listTrafficControlRequest.InstanceId = fca.instanceId
+	listTrafficControlRequest.SetDomain(fca.client.GetDomain())
 
 	if localVarOptionals.Env.Value() == common.Environment_Daily_Desc {
-		listFlowCtrlRequest.Environment = "Daily"
+		listTrafficControlRequest.Environment = "Daily"
 	} else if localVarOptionals.Env.Value() == common.Environment_Prepub_Desc {
-		listFlowCtrlRequest.Environment = "Pre"
+		listTrafficControlRequest.Environment = "Pre"
 	} else if localVarOptionals.Env.Value() == common.Environment_Product_Desc {
-		listFlowCtrlRequest.Environment = "Prod"
+		listTrafficControlRequest.Environment = "Prod"
 	}
 
 	if localVarOptionals.Status.Value() == common.FlowCtrlPlan_NotRunning_Status {
-		listFlowCtrlRequest.Status = "NotRunning"
+		listTrafficControlRequest.Status = "NotRunning"
 	} else if localVarOptionals.Status.Value() == common.FlowCtrlPlan_Ready_Status {
-		listFlowCtrlRequest.Status = "Ready"
+		listTrafficControlRequest.Status = "Ready"
 	} else if localVarOptionals.Status.Value() == common.FlowCtrlPlan_Running_Status {
-		listFlowCtrlRequest.Status = "Running"
+		listTrafficControlRequest.Status = "Running"
 	} else if localVarOptionals.Status.Value() == common.FlowCtrlPlan_Finished_Status {
-		listFlowCtrlRequest.Status = "Finished"
+		listTrafficControlRequest.Status = "Finished"
 	}
 
 	if localVarOptionals.Version.Value() == common.Version_Latest {
-		listFlowCtrlRequest.Version = "Latest"
+		listTrafficControlRequest.Version = "Latest"
 	} else if localVarOptionals.Version.Value() == common.Version_Released {
-		listFlowCtrlRequest.Version = "Released"
+		listTrafficControlRequest.Version = "Released"
 	}
 
 	if localVarOptionals.ControlTargetFilter.Value() == common.ControlTargetFilter_All {
-		listFlowCtrlRequest.ControlTargetFilter = "All"
+		listTrafficControlRequest.ControlTargetFilter = "All"
 	} else if localVarOptionals.ControlTargetFilter.Value() == common.ControlTargetFilter_Vaild {
-		listFlowCtrlRequest.ControlTargetFilter = "Valid"
+		listTrafficControlRequest.ControlTargetFilter = "Valid"
 	} else if localVarOptionals.ControlTargetFilter.Value() == common.ControlTargetFilter_None {
-		listFlowCtrlRequest.ControlTargetFilter = "None"
+		listTrafficControlRequest.ControlTargetFilter = "None"
 	}
 
-	listFlowCtrlRequest.All = requests.NewBoolean(localVarOptionals.ALL.Value())
+	listTrafficControlRequest.All = requests.NewBoolean(localVarOptionals.ALL.Value())
 
 	var (
-		localVarReturnValue ListFlowCtrlPlansResponse
-		flowCtrlPlanArray   []model.TrafficControlTasksItem
+		localVarReturnValue ListTrafficControlTasksResponse
+		flowCtrlPlanArray   []model.TrafficControlTask
 	)
-	response, err := fca.client.ListTrafficControlTasks(listFlowCtrlRequest)
+	response, err := fca.client.ListTrafficControlTasks(listTrafficControlRequest)
 
 	if err != nil || response == nil {
 		return localVarReturnValue, err
@@ -95,7 +96,7 @@ func (fca *FlowCtrlApiService) ListFlowCtrlPlans(localVarOptionals *FlowCtrlApiL
 	}
 
 	for tIndex, trafficControlTask := range response.TrafficControlTasks {
-		var task model.TrafficControlTasksItem
+		var task model.TrafficControlTask
 		//存储流量调控任务列表
 		task.TrafficControlTaskId = trafficControlTask.TrafficControlTaskId
 		task.Name = trafficControlTask.Name
@@ -130,10 +131,10 @@ func (fca *FlowCtrlApiService) ListFlowCtrlPlans(localVarOptionals *FlowCtrlApiL
 		if task.TrafficControlTargets == nil {
 			continue
 		}
-		var targets []model.TrafficControlTargetsItem
+		var trafficControlTargets []model.TrafficControlTarget
 		//存储流量调控目标列表
 		for index, target := range trafficControlTask.TrafficControlTargets {
-			var t model.TrafficControlTargetsItem
+			var t model.TrafficControlTarget
 			t.TrafficControlTaskId = trafficControlTask.TrafficControlTaskId
 			t.TrafficControlTargetId = target.TrafficControlTargetId
 			t.Name = target.Name
@@ -152,77 +153,80 @@ func (fca *FlowCtrlApiService) ListFlowCtrlPlans(localVarOptionals *FlowCtrlApiL
 			t.SplitParts = target.SplitParts
 			t.GmtCreateTime = target.GmtCreateTime
 			t.GmtModifiedTime = target.GmtModifiedTime
-			targets[index] = t
+			trafficControlTargets[index] = t
 		}
 
-		task.TrafficControlTargets = targets
+		task.TrafficControlTargets = trafficControlTargets
 
-		getTableMetaRequest := pairecservice.CreateGetTableMetaRequest()
-		getTableMetaRequest.TableMetaId = trafficControlTask.BehaviorTableMetaId
-		getTableMetaRequest.InstanceId = fca.instanceId
+		behaviorTableMetaRequest := pairecservice.CreateGetTableMetaRequest()
+		behaviorTableMetaRequest.TableMetaId = trafficControlTask.BehaviorTableMetaId
+		behaviorTableMetaRequest.InstanceId = fca.instanceId
+		behaviorTableMetaRequest.SetDomain(fca.client.GetDomain())
 
-		bMeta, err := fca.client.GetTableMeta(getTableMetaRequest)
+		behaviorTableMeta, err := fca.client.GetTableMeta(behaviorTableMetaRequest)
 
 		if err == nil {
 			task.BehaviorTableMeta = &pairecservice.TableMetasItem{
-				Name:            bMeta.Name,
-				ResourceId:      bMeta.ResourceId,
-				TableName:       bMeta.TableName,
-				Type:            bMeta.Type,
-				Description:     bMeta.Description,
-				Module:          bMeta.Module,
-				Url:             bMeta.Url,
-				GmtCreateTime:   bMeta.GmtCreateTime,
-				GmtModifiedTime: bMeta.GmtModifiedTime,
-				GmtImportedTime: bMeta.GmtImportedTime,
-				Config:          bMeta.Config,
-				Fields:          bMeta.Fields,
+				Name:            behaviorTableMeta.Name,
+				ResourceId:      behaviorTableMeta.ResourceId,
+				TableName:       behaviorTableMeta.TableName,
+				Type:            behaviorTableMeta.Type,
+				Description:     behaviorTableMeta.Description,
+				Module:          behaviorTableMeta.Module,
+				Url:             behaviorTableMeta.Url,
+				GmtCreateTime:   behaviorTableMeta.GmtCreateTime,
+				GmtModifiedTime: behaviorTableMeta.GmtModifiedTime,
+				GmtImportedTime: behaviorTableMeta.GmtImportedTime,
+				Config:          behaviorTableMeta.Config,
+				Fields:          behaviorTableMeta.Fields,
 			}
 		}
 
-		uGetTableMetaRequest := pairecservice.CreateGetTableMetaRequest()
-		getTableMetaRequest.TableMetaId = trafficControlTask.UserTableMetaId
-		getTableMetaRequest.InstanceId = fca.instanceId
+		userTableMetaRequest := pairecservice.CreateGetTableMetaRequest()
+		userTableMetaRequest.TableMetaId = trafficControlTask.UserTableMetaId
+		userTableMetaRequest.InstanceId = fca.instanceId
+		userTableMetaRequest.SetDomain(fca.client.GetDomain())
 
-		uMeta, err := fca.client.GetTableMeta(uGetTableMetaRequest)
+		userTableMeta, err := fca.client.GetTableMeta(userTableMetaRequest)
 
 		if err == nil {
 			task.UserTableMeta = &pairecservice.TableMetasItem{
-				Name:            uMeta.Name,
-				ResourceId:      uMeta.ResourceId,
-				TableName:       uMeta.TableName,
-				Type:            uMeta.Type,
-				Description:     uMeta.Description,
-				Module:          uMeta.Module,
-				Url:             uMeta.Url,
-				GmtCreateTime:   uMeta.GmtCreateTime,
-				GmtModifiedTime: uMeta.GmtModifiedTime,
-				GmtImportedTime: uMeta.GmtImportedTime,
-				Config:          uMeta.Config,
-				Fields:          uMeta.Fields,
+				Name:            userTableMeta.Name,
+				ResourceId:      userTableMeta.ResourceId,
+				TableName:       userTableMeta.TableName,
+				Type:            userTableMeta.Type,
+				Description:     userTableMeta.Description,
+				Module:          userTableMeta.Module,
+				Url:             userTableMeta.Url,
+				GmtCreateTime:   userTableMeta.GmtCreateTime,
+				GmtModifiedTime: userTableMeta.GmtModifiedTime,
+				GmtImportedTime: userTableMeta.GmtImportedTime,
+				Config:          userTableMeta.Config,
+				Fields:          userTableMeta.Fields,
 			}
 		}
 
-		iGetTableMetaRequest := pairecservice.CreateGetTableMetaRequest()
-		getTableMetaRequest.TableMetaId = trafficControlTask.ItemTableMetaId
-		getTableMetaRequest.InstanceId = fca.instanceId
+		itemTableMetaRequest := pairecservice.CreateGetTableMetaRequest()
+		itemTableMetaRequest.TableMetaId = trafficControlTask.ItemTableMetaId
+		itemTableMetaRequest.InstanceId = fca.instanceId
+		itemTableMetaRequest.SetDomain(fca.client.GetDomain())
 
-		iMeta, err := fca.client.GetTableMeta(iGetTableMetaRequest)
+		itemTableMeta, err := fca.client.GetTableMeta(itemTableMetaRequest)
 
 		if err == nil {
 			task.ItemTableMeta = &pairecservice.TableMetasItem{
-				Name:            iMeta.Name,
-				ResourceId:      iMeta.ResourceId,
-				TableName:       iMeta.TableName,
-				Type:            iMeta.Type,
-				Description:     iMeta.Description,
-				Module:          iMeta.Module,
-				Url:             iMeta.Url,
-				GmtCreateTime:   iMeta.GmtCreateTime,
-				GmtModifiedTime: iMeta.GmtModifiedTime,
-				GmtImportedTime: iMeta.GmtImportedTime,
-				Config:          iMeta.Config,
-				Fields:          iMeta.Fields,
+				Name:            itemTableMeta.Name,
+				ResourceId:      itemTableMeta.ResourceId,
+				TableName:       itemTableMeta.TableName,
+				Type:            itemTableMeta.Type,
+				Description:     itemTableMeta.Description,
+				Module:          itemTableMeta.Module,
+				Url:             itemTableMeta.Url,
+				GmtCreateTime:   itemTableMeta.GmtCreateTime,
+				GmtModifiedTime: itemTableMeta.GmtModifiedTime,
+				GmtImportedTime: itemTableMeta.GmtImportedTime,
+				Config:          itemTableMeta.Config,
+				Fields:          itemTableMeta.Fields,
 			}
 		}
 		//Obtain traffic details about a traffic control task
@@ -232,7 +236,8 @@ func (fca *FlowCtrlApiService) ListFlowCtrlPlans(localVarOptionals *FlowCtrlApiL
 				trafficControlTaskTrafficRequest := pairecservice.CreateGetTrafficControlTaskTrafficRequest()
 				trafficControlTaskTrafficRequest.TrafficControlTaskId = targetTask.TrafficControlTargetId
 				trafficControlTaskTrafficRequest.InstanceId = fca.instanceId
-				trafficControlTaskTrafficRequest.Environment = listFlowCtrlRequest.Environment
+				trafficControlTaskTrafficRequest.Environment = listTrafficControlRequest.Environment
+				trafficControlTaskTrafficRequest.SetDomain(fca.client.GetDomain())
 				tResponse, err := fca.client.common.client.GetTrafficControlTaskTraffic(trafficControlTaskTrafficRequest)
 				if tResponse == nil || err != nil {
 					continue
@@ -242,7 +247,7 @@ func (fca *FlowCtrlApiService) ListFlowCtrlPlans(localVarOptionals *FlowCtrlApiL
 				for _, targetTraffic := range traffic.TargetTraffics {
 					tid, err := strconv.Atoi(targetTraffic.TrafficContorlTargetId)
 					if err == nil {
-						toSetTraffic := targets[tid]
+						toSetTraffic := trafficControlTargets[tid]
 						for k, v := range traffic.TaskTraffics {
 							toSetTraffic.PlanTraffic[k] = v.(float64)
 						}
@@ -258,6 +263,6 @@ func (fca *FlowCtrlApiService) ListFlowCtrlPlans(localVarOptionals *FlowCtrlApiL
 		flowCtrlPlanArray[tIndex] = task
 	}
 
-	localVarReturnValue.Data.TrafficControlTasks = flowCtrlPlanArray
+	localVarReturnValue.TrafficControlTasks = flowCtrlPlanArray
 	return localVarReturnValue, nil
 }

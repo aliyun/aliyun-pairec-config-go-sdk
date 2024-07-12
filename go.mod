@@ -16,4 +16,4 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )
 
-require github.com/aliyun/alibaba-cloud-sdk-go v1.62.778
+require github.com/aliyun/alibaba-cloud-sdk-go v1.62.787

@@ -98,26 +98,26 @@ func TestFeatureConsistencyReply(t *testing.T) {
 
 // /**
 
-func TestGetFlowCtrlPlanMetaList(t *testing.T) {
+func TestGetTrafficControlTaskMetaList(t *testing.T) {
 	client := createExperimentClient(common.Environment_Prepub_Desc)
-	plans := client.GetFlowCtrlPlanMetaList("prepub", 0)
+	plans := client.GetTrafficControlTaskMetaData("product", 0)
 	fmt.Println("-----------")
 	for _, plan := range plans {
 		fmt.Printf("%++v", plan)
 	}
 }
 
-func TestGetFlowCtrlPlanTargetList(t *testing.T) {
+func TestGetTrafficControlTargetList(t *testing.T) {
 	client := createExperimentClient(common.Environment_Prepub_Desc)
-	targets := client.GetFlowCtrlPlanTargetList("prepub", "", 0)
+	targets := client.GetTrafficControlTargetData("prepub", "", 0)
 	for planId, target := range targets {
 		fmt.Printf("%d %+v", planId, target)
 	}
 }
 
-func TestCheckIfFlowCtrlPlanIsEnabled(t *testing.T) {
+func TestCheckIfTrafficControlTargetIsEnabled(t *testing.T) {
 	client := createExperimentClient(common.Environment_Prepub_Desc)
-	enabled := client.CheckIfFlowCtrlPlanTargetIsEnabled("prepub", 9, 0)
+	enabled := client.CheckIfTrafficControlTargetIsEnabled("prepub", 9, 0)
 	fmt.Println(enabled)
 }
 
@@ -135,12 +135,10 @@ func TestCheckExperimentRoomDebugUsers(t *testing.T) {
 	}
 }
 
-func TestGetFlowCtrlPlanTargetTraffic(t *testing.T) {
+func TestGetTrafficControlTargetTraffic(t *testing.T) {
 	client := createExperimentClient(common.Environment_Prepub_Desc)
-	fmt.Println(client.GetFlowCtrlPlanTargetList("prepub", "test", 0))
+	fmt.Println(client.GetTrafficControlTargetTraffic("prepub", "test", ""))
 
 	idList := []string{"ER_ALL", "12345678", "unknown"}
-	fmt.Printf("%+v\n", client.GetFlowCtrlPlanTargetTraffic("prepub", "test", idList...))
+	fmt.Printf("%+v\n", client.GetTrafficControlTargetTraffic("prepub", "test", idList...))
 }
-
-// **/

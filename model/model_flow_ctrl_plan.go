@@ -2,7 +2,7 @@ package model
 
 import "github.com/aliyun/alibaba-cloud-sdk-go/services/pairecservice"
 
-type TrafficControlTasksItem struct {
+type TrafficControlTask struct {
 	TrafficControlTaskId string `json:"TrafficControlTaskId" xml:"TrafficControlTaskId"`
 	Name                 string `json:"Name" xml:"Name"`
 	Description          string `json:"Description" xml:"Description"`
@@ -22,25 +22,25 @@ type TrafficControlTasksItem struct {
 	UserTableMeta     *pairecservice.TableMetasItem `json:"UserTableMeta"`
 	ItemTableMeta     *pairecservice.TableMetasItem `json:"ItemTableMeta"`
 
-	UserConditionType              string                      `json:"UserConditionType" xml:"UserConditionType"`
-	UserConditionArray             string                      `json:"UserConditionArray" xml:"UserConditionArray"`
-	UserConditionExpress           string                      `json:"UserConditionExpress" xml:"UserConditionExpress"`
-	StatisBehaviorConditionType    string                      `json:"StatisBehaviorConditionType" xml:"StatisBehaviorConditionType"`
-	StatisBehaviorConditionArray   string                      `json:"StatisBehaviorConditionArray" xml:"StatisBehaviorConditionArray"`
-	StatisBahaviorConditionExpress string                      `json:"StatisBahaviorConditionExpress" xml:"StatisBahaviorConditionExpress"`
-	ControlType                    string                      `json:"ControlType" xml:"ControlType"`
-	ControlGranularity             string                      `json:"ControlGranularity" xml:"ControlGranularity"`
-	ControlLogic                   string                      `json:"ControlLogic" xml:"ControlLogic"`
-	ItemConditionType              string                      `json:"ItemConditionType" xml:"ItemConditionType"`
-	ItemConditionArray             string                      `json:"ItemConditionArray" xml:"ItemConditionArray"`
-	ItemConditionExpress           string                      `json:"ItemConditionExpress" xml:"ItemConditionExpress"`
-	GmtCreateTime                  string                      `json:"GmtCreateTime" xml:"GmtCreateTime"`
-	GmtModifiedTime                string                      `json:"GmtModifiedTime" xml:"GmtModifiedTime"`
-	EverPublished                  bool                        `json:"EverPublished" xml:"EverPublished"`
-	TrafficControlTargets          []TrafficControlTargetsItem `json:"TrafficControlTargets" xml:"TrafficControlTargets"`
+	UserConditionType              string                 `json:"UserConditionType" xml:"UserConditionType"`
+	UserConditionArray             string                 `json:"UserConditionArray" xml:"UserConditionArray"`
+	UserConditionExpress           string                 `json:"UserConditionExpress" xml:"UserConditionExpress"`
+	StatisBehaviorConditionType    string                 `json:"StatisBehaviorConditionType" xml:"StatisBehaviorConditionType"`
+	StatisBehaviorConditionArray   string                 `json:"StatisBehaviorConditionArray" xml:"StatisBehaviorConditionArray"`
+	StatisBahaviorConditionExpress string                 `json:"StatisBahaviorConditionExpress" xml:"StatisBahaviorConditionExpress"`
+	ControlType                    string                 `json:"ControlType" xml:"ControlType"`
+	ControlGranularity             string                 `json:"ControlGranularity" xml:"ControlGranularity"`
+	ControlLogic                   string                 `json:"ControlLogic" xml:"ControlLogic"`
+	ItemConditionType              string                 `json:"ItemConditionType" xml:"ItemConditionType"`
+	ItemConditionArray             string                 `json:"ItemConditionArray" xml:"ItemConditionArray"`
+	ItemConditionExpress           string                 `json:"ItemConditionExpress" xml:"ItemConditionExpress"`
+	GmtCreateTime                  string                 `json:"GmtCreateTime" xml:"GmtCreateTime"`
+	GmtModifiedTime                string                 `json:"GmtModifiedTime" xml:"GmtModifiedTime"`
+	EverPublished                  bool                   `json:"EverPublished" xml:"EverPublished"`
+	TrafficControlTargets          []TrafficControlTarget `json:"TrafficControlTargets" xml:"TrafficControlTargets"`
 }
 
-type TrafficControlTargetsItem struct {
+type TrafficControlTarget struct {
 	TrafficControlTaskId   string                                          `json:"TrafficControlTaskId" xml:"TrafficControlTaskId"`
 	Name                   string                                          `json:"Name" xml:"Name"`
 	Event                  string                                          `json:"Event" xml:"Event"`

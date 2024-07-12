@@ -147,7 +147,7 @@ func (e *ExperimentClient) CheckIfTrafficControlTargetIsEnabled(env string, targ
 					startTime, _ := time.Parse(time.RFC3339, target.StartTime)
 					endTime, _ := time.Parse(time.RFC3339, target.EndTime)
 
-					if target.Status == "Running" && startTime.Unix() < currentTimestamp && currentTimestamp < endTime.Unix() {
+					if target.Status == "Opened" && startTime.Unix() < currentTimestamp && currentTimestamp < endTime.Unix() {
 						return true
 					}
 				}

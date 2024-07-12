@@ -130,7 +130,7 @@ func (fca *FlowCtrlApiService) ListTrafficControlTasks(localVarOptionals *Traffi
 
 		var trafficControlTargets []model.TrafficControlTarget
 		//存储流量调控目标列表
-		for index, target := range trafficControlTask.TrafficControlTargets {
+		for _, target := range trafficControlTask.TrafficControlTargets {
 			var t model.TrafficControlTarget
 			t.TrafficControlTaskId = trafficControlTask.TrafficControlTaskId
 			t.TrafficControlTargetId = target.TrafficControlTargetId
@@ -150,7 +150,7 @@ func (fca *FlowCtrlApiService) ListTrafficControlTasks(localVarOptionals *Traffi
 			t.SplitParts = target.SplitParts
 			t.GmtCreateTime = target.GmtCreateTime
 			t.GmtModifiedTime = target.GmtModifiedTime
-			trafficControlTargets[index] = t
+			trafficControlTargets = append(trafficControlTargets, t)
 		}
 		task.TrafficControlTargets = trafficControlTargets
 

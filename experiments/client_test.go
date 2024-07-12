@@ -117,7 +117,7 @@ func TestGetTrafficControlTargetData(t *testing.T) {
 
 func TestCheckIfTrafficControlTargetIsEnabled(t *testing.T) {
 	client := createExperimentClient(common.Environment_Prepub_Desc)
-	enabled := client.CheckIfTrafficControlTargetIsEnabled("prepub", 9, 0)
+	enabled := client.CheckIfTrafficControlTargetIsEnabled("prepub", 45, 0)
 	fmt.Println(enabled)
 }
 
@@ -137,8 +137,8 @@ func TestCheckExperimentRoomDebugUsers(t *testing.T) {
 
 func TestGetTrafficControlTargetTraffic(t *testing.T) {
 	client := createExperimentClient(common.Environment_Prepub_Desc)
-	fmt.Println(client.GetTrafficControlTargetTraffic("prepub", "test", ""))
+	fmt.Println(client.GetTrafficControlTargetTraffic("prepub", "test1", ""))
 
 	idList := []string{"ER_ALL", "12345678", "unknown"}
-	fmt.Printf("%+v\n", client.GetTrafficControlTargetTraffic("prepub", "test", idList...))
+	fmt.Printf("%+v\n", client.GetTrafficControlTargetTraffic("prepub", "test1", idList...))
 }

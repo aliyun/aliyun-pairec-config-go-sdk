@@ -98,7 +98,7 @@ func TestFeatureConsistencyReply(t *testing.T) {
 
 // /**
 
-func TestGetTrafficControlTaskMetaList(t *testing.T) {
+func TestGetTrafficControlTaskMetaData(t *testing.T) {
 	client := createExperimentClient(common.Environment_Prepub_Desc)
 	plans := client.GetTrafficControlTaskMetaData("product", 0)
 	fmt.Println("-----------")
@@ -107,7 +107,7 @@ func TestGetTrafficControlTaskMetaList(t *testing.T) {
 	}
 }
 
-func TestGetTrafficControlTargetList(t *testing.T) {
+func TestGetTrafficControlTargetData(t *testing.T) {
 	client := createExperimentClient(common.Environment_Prepub_Desc)
 	targets := client.GetTrafficControlTargetData("prepub", "", 0)
 	for planId, target := range targets {

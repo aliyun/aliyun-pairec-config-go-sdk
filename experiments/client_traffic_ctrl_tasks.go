@@ -86,8 +86,8 @@ func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, cu
 
 		for _, traffic := range sceneTraffics {
 			for i, target := range traffic.TrafficControlTargets {
-				startTime, _ := time.Parse("2024-07-09 13:41:15", target.StartTime)
-				endTime, _ := time.Parse("2024-07-09 13:41:15", target.EndTime)
+				startTime, _ := time.Parse(time.RFC3339, target.StartTime)
+				endTime, _ := time.Parse(time.RFC3339, target.EndTime)
 
 				if target.Status == "Opened" && startTime.Unix() < currentTimestamp && currentTimestamp <= endTime.Unix() {
 					tid, _ := strconv.Atoi(target.TrafficControlTargetId)
@@ -115,10 +115,10 @@ func (e *ExperimentClient) GetTrafficControlTaskMetaData(env string, currentTime
 
 	for _, sceneTraffics := range data {
 		for i, traffic := range sceneTraffics {
-			startTime, _ := time.Parse("2024-07-09 13:41:15", traffic.StartTime)
-			endTime, _ := time.Parse("2024-07-09 13:41:15", traffic.EndTime)
+			startTime, _ := time.Parse(time.RFC3339, traffic.StartTime)
+			endTime, _ := time.Parse(time.RFC3339, traffic.EndTime)
 
-			if traffic.ProductStatus == "Opened" && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
+			if traffic.ProductStatus == "Running" && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
 				traffics = append(traffics, sceneTraffics[i])
 			}
 		}
@@ -144,10 +144,10 @@ func (e *ExperimentClient) CheckIfTrafficControlTargetIsEnabled(env string, targ
 					e.logError(fmt.Errorf("traffic control targetId is illegal"))
 				}
 				if tid == targetId {
-					startTime, _ := time.Parse("2024-07-09 13:41:15", target.StartTime)
-					endTime, _ := time.Parse("2024-07-09 13:41:15", target.EndTime)
+					startTime, _ := time.Parse(time.RFC3339, target.StartTime)
+					endTime, _ := time.Parse(time.RFC3339, target.EndTime)
 
-					if target.Status == "Opened" && startTime.Unix() < currentTimestamp && currentTimestamp < endTime.Unix() {
+					if target.Status == "Running" && startTime.Unix() < currentTimestamp && currentTimestamp < endTime.Unix() {
 						return true
 					}
 				}

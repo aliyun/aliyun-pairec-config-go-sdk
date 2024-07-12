@@ -95,7 +95,7 @@ func (fca *FlowCtrlApiService) ListTrafficControlTasks(localVarOptionals *Traffi
 		return localVarReturnValue, err
 	}
 
-	for tIndex, trafficControlTask := range response.TrafficControlTasks {
+	for _, trafficControlTask := range response.TrafficControlTasks {
 		var task model.TrafficControlTask
 		//存储流量调控任务列表
 		task.TrafficControlTaskId = trafficControlTask.TrafficControlTaskId
@@ -128,9 +128,6 @@ func (fca *FlowCtrlApiService) ListTrafficControlTasks(localVarOptionals *Traffi
 		task.GmtCreateTime = trafficControlTask.GmtCreateTime
 		task.GmtModifiedTime = trafficControlTask.GmtModifiedTime
 
-		if task.TrafficControlTargets == nil {
-			continue
-		}
 		var trafficControlTargets []model.TrafficControlTarget
 		//存储流量调控目标列表
 		for index, target := range trafficControlTask.TrafficControlTargets {
@@ -155,7 +152,6 @@ func (fca *FlowCtrlApiService) ListTrafficControlTasks(localVarOptionals *Traffi
 			t.GmtModifiedTime = target.GmtModifiedTime
 			trafficControlTargets[index] = t
 		}
-
 		task.TrafficControlTargets = trafficControlTargets
 
 		behaviorTableMetaRequest := pairecservice.CreateGetTableMetaRequest()
@@ -260,7 +256,8 @@ func (fca *FlowCtrlApiService) ListTrafficControlTasks(localVarOptionals *Traffi
 			}
 
 		}
-		flowCtrlPlanArray[tIndex] = task
+
+		flowCtrlPlanArray = append(flowCtrlPlanArray, task)
 	}
 
 	localVarReturnValue.TrafficControlTasks = flowCtrlPlanArray

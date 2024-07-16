@@ -15,7 +15,7 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 	prodOpt := &api.TrafficControlApiListTrafficControlTasksOpts{
 		ALL:                 optional.NewBool(true),
 		ControlTargetFilter: optional.NewString("Valid"),
-		Env:                 optional.NewString("product"),
+		Env:                 optional.NewString("Prod"),
 		Status:              optional.NewString("Running"),
 		Version:             optional.NewString("Released"),
 	}
@@ -38,7 +38,7 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 	prePubOpt := &api.TrafficControlApiListTrafficControlTasksOpts{
 		ALL:                 optional.NewBool(true),
 		ControlTargetFilter: optional.NewString("Valid"),
-		Env:                 optional.NewString("prepub"),
+		Env:                 optional.NewString("Pre"),
 		Status:              optional.NewString("Running"),
 		Version:             optional.NewString("Released"),
 	}
@@ -67,9 +67,9 @@ func (e *ExperimentClient) loopLoadSceneFlowCtrlPlansData() {
 	}
 }
 
-func (e *ExperimentClient) SetTrafficControlTraffic(trafficData model.TrafficControlTaskTrafficData) string {
-	response := e.APIClient.TrafficControlTrafficsService.SetTrafficControlTrafficFData(trafficData)
-	return response
+func (e *ExperimentClient) SetTrafficControlTraffic(trafficData model.TrafficControlTaskTrafficData) (string, error) {
+	response, err := e.APIClient.TrafficControlTrafficsService.SetTrafficControlTrafficFData(trafficData)
+	return response, err
 }
 
 func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, currentTimestamp int64) map[int]model.TrafficControlTarget {
@@ -80,7 +80,7 @@ func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, cu
 	trafficControlTargets := make(map[int]model.TrafficControlTarget)
 
 	data := e.productSceneTrafficControlTaskData
-	if env == "prepub" {
+	if env == "Pre" {
 		data = e.prepubSceneTrafficControlTaskData
 	}
 
@@ -114,7 +114,7 @@ func (e *ExperimentClient) GetTrafficControlTaskMetaData(env string, currentTime
 
 	data := e.productSceneTrafficControlTaskData
 
-	if env == "prepub" {
+	if env == "Pre" {
 		data = e.prepubSceneTrafficControlTaskData
 	}
 
@@ -164,7 +164,7 @@ func (e *ExperimentClient) CheckIfTrafficControlTargetIsEnabled(env string, targ
 
 type TrafficControlTargetTraffic struct {
 	ItemOrExpId            string  `json:"item_or_exp_id"`
-	TrafficControlTaskId   string  `json:"plan_id"`
+	TrafficControlTaskId   string  `json:"traffic_control_task_id"`
 	TrafficControlTargetId string  `json:"target_id"`
 	TargetTraffic          float64 `json:"target_traffic"`
 	PlanTraffic            float64 `json:"plan_traffic"`

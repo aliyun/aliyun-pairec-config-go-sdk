@@ -15,7 +15,7 @@ var (
 	_ context.Context
 )
 
-type FlowCtrlApiService service
+type TrafficControlApiService service
 
 /*
 FlowCtrlApiService 获取流控计划列表
@@ -41,9 +41,8 @@ type TrafficControlApiListTrafficControlTasksOpts struct {
 	ALL                  optional.Bool
 }
 
-func (fca *FlowCtrlApiService) ListTrafficControlTasks(localVarOptionals *TrafficControlApiListTrafficControlTasksOpts) (ListTrafficControlTasksResponse, error) {
+func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *TrafficControlApiListTrafficControlTasksOpts) (ListTrafficControlTasksResponse, error) {
 	listTrafficControlRequest := pairecservice.CreateListTrafficControlTasksRequest()
-	//listFlowCtrlRequest.
 	listTrafficControlRequest.InstanceId = fca.instanceId
 	listTrafficControlRequest.SetDomain(fca.client.GetDomain())
 

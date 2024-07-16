@@ -19,7 +19,7 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 		Status:              optional.NewString("Running"),
 		Version:             optional.NewString("Released"),
 	}
-	prodResponse, err := e.APIClient.FlowCtrlApi.ListTrafficControlTasks(prodOpt)
+	prodResponse, err := e.APIClient.TrafficControlApi.ListTrafficControlTasks(prodOpt)
 	if err != nil {
 		e.logError(fmt.Errorf("list flow plans error, err=%v", err))
 		return
@@ -42,7 +42,7 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 		Status:              optional.NewString("Running"),
 		Version:             optional.NewString("Released"),
 	}
-	prePubResponse, _ := e.APIClient.FlowCtrlApi.ListTrafficControlTasks(prePubOpt)
+	prePubResponse, _ := e.APIClient.TrafficControlApi.ListTrafficControlTasks(prePubOpt)
 	if err != nil {
 		e.logError(fmt.Errorf("list flow plans error,error=%v", err))
 		return
@@ -65,6 +65,11 @@ func (e *ExperimentClient) loopLoadSceneFlowCtrlPlansData() {
 		time.Sleep(time.Second * 30)
 		e.LoadSceneTrafficControlTasksData()
 	}
+}
+
+func (e *ExperimentClient) SetTrafficControlTraffic(trafficData model.TrafficControlTaskTrafficData) string {
+	response := e.APIClient.TrafficControlTrafficsService.SetTrafficControlTrafficFData(trafficData)
+	return response
 }
 
 func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, currentTimestamp int64) map[int]model.TrafficControlTarget {

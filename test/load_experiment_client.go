@@ -1,4 +1,4 @@
-package loadTest
+package test
 
 import (
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/experiments"

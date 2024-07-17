@@ -60,6 +60,6 @@ type TrafficControlTarget struct {
 	ItemConditionExpress   string                                          `json:"ItemConditionExpress" xml:"ItemConditionExpress"`
 	SplitParts             pairecservice.SplitPartsInGetTrafficControlTask `json:"SplitParts" xml:"SplitParts"`
 
-	PlanTraffic    map[string]float64 `json:"plan_traffics"`
+	PlanTraffics   map[string]float64 `json:"plan_traffics"`
 	TargetTraffics map[string]float64 `json:"target_traffics"`
 }

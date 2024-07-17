@@ -15,7 +15,7 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 	prodOpt := &api.TrafficControlApiListTrafficControlTasksOpts{
 		ALL:                 optional.NewBool(true),
 		ControlTargetFilter: optional.NewString("Valid"),
-		Env:                 optional.NewString("Prod"),
+		Env:                 optional.NewString("product"),
 		Status:              optional.NewString("Running"),
 		Version:             optional.NewString("Released"),
 	}
@@ -38,7 +38,7 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 	prePubOpt := &api.TrafficControlApiListTrafficControlTasksOpts{
 		ALL:                 optional.NewBool(true),
 		ControlTargetFilter: optional.NewString("Valid"),
-		Env:                 optional.NewString("Pre"),
+		Env:                 optional.NewString("prepub"),
 		Status:              optional.NewString("Running"),
 		Version:             optional.NewString("Released"),
 	}
@@ -68,16 +68,16 @@ func (e *ExperimentClient) loopLoadSceneFlowCtrlPlansData() {
 }
 
 func (e *ExperimentClient) SetTrafficControlTraffic(trafficData model.TrafficControlTaskTrafficData) (string, error) {
-	response, err := e.APIClient.TrafficControlTrafficsService.SetTrafficControlTrafficFData(trafficData)
+	response, err := e.APIClient.TrafficControlApi.SetTrafficControlTrafficFData(trafficData)
 	return response, err
 }
 
-func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, currentTimestamp int64) map[int]model.TrafficControlTarget {
+func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, currentTimestamp int64) map[string]model.TrafficControlTarget {
 	if currentTimestamp == 0 {
 		currentTimestamp = time.Now().Unix()
 	}
 
-	trafficControlTargets := make(map[int]model.TrafficControlTarget)
+	trafficControlTargets := make(map[string]model.TrafficControlTarget)
 
 	data := e.productSceneTrafficControlTaskData
 	if env == "Pre" {
@@ -95,8 +95,7 @@ func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, cu
 				endTime, _ := time.Parse(time.RFC3339, target.EndTime)
 
 				if target.Status == "Opened" && startTime.Unix() < currentTimestamp && currentTimestamp <= endTime.Unix() {
-					tid, _ := strconv.Atoi(target.TrafficControlTargetId)
-					trafficControlTargets[tid] = traffic.TrafficControlTargets[i]
+					trafficControlTargets[target.TrafficControlTargetId] = traffic.TrafficControlTargets[i]
 				}
 			}
 		}
@@ -177,6 +176,9 @@ func (e *ExperimentClient) GetTrafficControlTargetTraffic(env, sceneName string,
 
 	idMap := make(map[string]bool)
 	for _, id := range idList {
+		if id == "" {
+			continue
+		}
 		idMap[id] = true
 	}
 
@@ -188,7 +190,7 @@ func (e *ExperimentClient) GetTrafficControlTargetTraffic(env, sceneName string,
 					TrafficControlTaskId:   trafficTarget.TrafficControlTaskId,
 					TrafficControlTargetId: trafficTarget.TrafficControlTargetId,
 					TargetTraffic:          value,
-					PlanTraffic:            trafficTarget.PlanTraffic[id],
+					PlanTraffic:            trafficTarget.PlanTraffics[id],
 				})
 			}
 		}

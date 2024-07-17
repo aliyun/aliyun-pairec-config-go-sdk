@@ -2,13 +2,12 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/pairecservice"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 	"github.com/antihax/optional"
-	"strconv"
+	jsoniter "github.com/json-iterator/go"
 )
 
 // Linger please
@@ -47,7 +46,13 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 	listTrafficControlRequest.InstanceId = fca.instanceId
 	listTrafficControlRequest.SetDomain(fca.client.GetDomain())
 
-	listTrafficControlRequest.Environment = localVarOptionals.Env.Value()
+	if localVarOptionals.Env.Value() == common.Environment_Daily_Desc {
+		listTrafficControlRequest.Environment = "Daily"
+	} else if localVarOptionals.Env.Value() == common.Environment_Prepub_Desc {
+		listTrafficControlRequest.Environment = "Pre"
+	} else if localVarOptionals.Env.Value() == common.Environment_Product_Desc {
+		listTrafficControlRequest.Environment = "Prod"
+	}
 
 	if localVarOptionals.Status.Value() == common.FlowCtrlPlan_NotRunning_Status {
 		listTrafficControlRequest.Status = "NotRunning"
@@ -123,6 +128,8 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 		task.GmtModifiedTime = trafficControlTask.GmtModifiedTime
 
 		var trafficControlTargets []model.TrafficControlTarget
+		trafficControlTargetsMap := make(map[string]model.TrafficControlTarget)
+
 		//存储流量调控目标列表
 		for _, target := range trafficControlTask.TrafficControlTargets {
 			var t model.TrafficControlTarget
@@ -144,9 +151,8 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 			t.SplitParts = target.SplitParts
 			t.GmtCreateTime = target.GmtCreateTime
 			t.GmtModifiedTime = target.GmtModifiedTime
-			trafficControlTargets = append(trafficControlTargets, t)
+			trafficControlTargetsMap[target.TrafficControlTargetId] = t
 		}
-		task.TrafficControlTargets = trafficControlTargets
 
 		behaviorTableMetaRequest := pairecservice.CreateGetTableMetaRequest()
 		behaviorTableMetaRequest.TableMetaId = trafficControlTask.BehaviorTableMetaId
@@ -234,31 +240,53 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 			trafficControlTaskTrafficRequest.Environment = listTrafficControlRequest.Environment
 			trafficControlTaskTrafficRequest.SetDomain(fca.client.GetDomain())
 			tResponse, err := fca.client.common.client.GetTrafficControlTaskTraffic(trafficControlTaskTrafficRequest)
-			fmt.Println("--------------")
-			fmt.Println(tResponse.RequestId)
-			if tResponse == nil || err != nil {
-				continue
+			if err != nil {
+				return localVarReturnValue, err
 			}
 
 			traffic := tResponse.TrafficControlTaskTrafficInfo
-			for _, targetTraffic := range traffic.TargetTraffics {
-				tid, err := strconv.Atoi(targetTraffic.TrafficContorlTargetId)
-				if err == nil {
-					toSetTraffic := trafficControlTargets[tid]
-					for k, v := range traffic.TaskTraffics {
-						toSetTraffic.PlanTraffic[k] = v.(float64)
-					}
-					for k, v := range targetTraffic.Data[0] {
-						toSetTraffic.TargetTraffics[k] = v.(float64)
-					}
 
+			for _, targetTraffic := range traffic.TargetTraffics {
+				planTraffics := make(map[string]float64)
+				targetTraffics := make(map[string]float64)
+
+				toSetTraffic := trafficControlTargetsMap[targetTraffic.TrafficContorlTargetId]
+				for k, v := range traffic.TaskTraffics {
+					planTraffics[k] = v.(float64)
 				}
+				toSetTraffic.PlanTraffics = planTraffics
+				for k, v := range targetTraffic.Data[0] {
+					targetTraffics[k] = v.(float64)
+				}
+				toSetTraffic.TargetTraffics = targetTraffics
+				trafficControlTargetsMap[toSetTraffic.TrafficControlTargetId] = toSetTraffic
 			}
 		}
-
+		for _, target := range trafficControlTargetsMap {
+			trafficControlTargets = append(trafficControlTargets, target)
+		}
+		task.TrafficControlTargets = trafficControlTargets
 		flowCtrlPlanArray = append(flowCtrlPlanArray, task)
 	}
 
 	localVarReturnValue.TrafficControlTasks = flowCtrlPlanArray
 	return localVarReturnValue, nil
+}
+
+func (tct *TrafficControlApiService) SetTrafficControlTrafficFData(t model.TrafficControlTaskTrafficData) (string, error) {
+	t.InstanceId = tct.instanceId
+	req := pairecservice.CreateUpdateTrafficControlTaskTrafficRequest()
+	body, _ := jsoniter.MarshalToString(t)
+
+	req.TrafficControlTaskId = t.TrafficControlTaskId
+	req.Body = body
+	req.SetDomain(tct.client.GetDomain())
+
+	response, err := tct.client.UpdateTrafficControlTaskTraffic(req)
+
+	if err != nil {
+		return "", err
+	}
+	return response.RequestId, nil
+
 }

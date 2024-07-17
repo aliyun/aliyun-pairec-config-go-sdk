@@ -1,4 +1,4 @@
-package loadTest
+package test
 
 import (
 	"fmt"

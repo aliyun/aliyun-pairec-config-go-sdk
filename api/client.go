@@ -57,8 +57,6 @@ type APIClient struct {
 	TrafficControlApi *TrafficControlApiService
 
 	FeatureConsistencyCheckApi *FeatureConsistencyCheckService
-
-	TrafficControlTrafficsService *TrafficControlTrafficsService
 }
 
 type service struct {
@@ -91,8 +89,6 @@ func NewAPIClient(instanceId, region, accessId, accessKey string) (*APIClient, e
 	c.CrowdApi = (*CrowdApiService)(&c.common)
 	c.TrafficControlApi = (*TrafficControlApiService)(&c.common)
 	c.FeatureConsistencyCheckApi = (*FeatureConsistencyCheckService)(&c.common)
-	c.TrafficControlTrafficsService = (*TrafficControlTrafficsService)(&c.common)
-
 	return c, nil
 }
 

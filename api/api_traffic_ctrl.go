@@ -81,8 +81,8 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 	listTrafficControlRequest.All = requests.NewBoolean(localVarOptionals.ALL.Value())
 
 	var (
-		localVarReturnValue ListTrafficControlTasksResponse
-		flowCtrlPlanArray   []model.TrafficControlTask
+		localVarReturnValue     ListTrafficControlTasksResponse
+		trafficControlTaskArray []model.TrafficControlTask
 	)
 	response, err := fca.client.ListTrafficControlTasks(listTrafficControlRequest)
 
@@ -240,6 +240,7 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 			trafficControlTaskTrafficRequest.Environment = listTrafficControlRequest.Environment
 			trafficControlTaskTrafficRequest.SetDomain(fca.client.GetDomain())
 			tResponse, err := fca.client.common.client.GetTrafficControlTaskTraffic(trafficControlTaskTrafficRequest)
+
 			if err != nil {
 				return localVarReturnValue, err
 			}
@@ -266,10 +267,10 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 			trafficControlTargets = append(trafficControlTargets, target)
 		}
 		task.TrafficControlTargets = trafficControlTargets
-		flowCtrlPlanArray = append(flowCtrlPlanArray, task)
+		trafficControlTaskArray = append(trafficControlTaskArray, task)
 	}
 
-	localVarReturnValue.TrafficControlTasks = flowCtrlPlanArray
+	localVarReturnValue.TrafficControlTasks = trafficControlTaskArray
 	return localVarReturnValue, nil
 }
 

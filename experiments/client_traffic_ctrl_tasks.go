@@ -25,8 +25,8 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 		return
 	}
 
-	for _, plan := range prodResponse.TrafficControlTasks {
-		prodSceneTrafficControlTasksData[plan.SceneName] = append(prodSceneTrafficControlTasksData[plan.SceneName], plan)
+	for _, task := range prodResponse.TrafficControlTasks {
+		prodSceneTrafficControlTasksData[task.SceneName] = append(prodSceneTrafficControlTasksData[task.SceneName], task)
 	}
 
 	if len(prodSceneTrafficControlTasksData) > 0 {
@@ -34,7 +34,7 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 	}
 
 	// Load traffic control data for the pre-load environment
-	prepubSceneFlowCtrlPlanData := make(map[string][]model.TrafficControlTask, 0)
+	prepubSceneTrafficControlTasksData := make(map[string][]model.TrafficControlTask, 0)
 	prePubOpt := &api.TrafficControlApiListTrafficControlTasksOpts{
 		ALL:                 optional.NewBool(true),
 		ControlTargetFilter: optional.NewString("Valid"),
@@ -48,12 +48,12 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 		return
 	}
 
-	for _, plan := range prePubResponse.TrafficControlTasks {
-		prepubSceneFlowCtrlPlanData[plan.SceneName] = append(prepubSceneFlowCtrlPlanData[plan.SceneName], plan)
+	for _, task := range prePubResponse.TrafficControlTasks {
+		prepubSceneTrafficControlTasksData[task.SceneName] = append(prepubSceneTrafficControlTasksData[task.SceneName], task)
 	}
 
-	if len(prepubSceneFlowCtrlPlanData) > 0 {
-		e.prepubSceneTrafficControlTaskData = prepubSceneFlowCtrlPlanData
+	if len(prepubSceneTrafficControlTasksData) > 0 {
+		e.prepubSceneTrafficControlTaskData = prepubSceneTrafficControlTasksData
 	}
 
 }
@@ -80,7 +80,7 @@ func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, cu
 	trafficControlTargets := make(map[string]model.TrafficControlTarget)
 
 	data := e.productSceneTrafficControlTaskData
-	if env == "Pre" {
+	if env == "prepub" {
 		data = e.prepubSceneTrafficControlTaskData
 	}
 
@@ -113,7 +113,7 @@ func (e *ExperimentClient) GetTrafficControlTaskMetaData(env string, currentTime
 
 	data := e.productSceneTrafficControlTaskData
 
-	if env == "Pre" {
+	if env == "prepub" {
 		data = e.prepubSceneTrafficControlTaskData
 	}
 

@@ -45,10 +45,10 @@ const (
 	CODE_OK                            = "OK"
 	Feature_Consistency_Job_Param_Name = "_feature_consistency_job_"
 
-	FlowCtrlPlan_NotRunning_Status = "NotRunning"
-	FlowCtrlPlan_Running_Status    = "Running"
-	FlowCtrlPlan_Ready_Status      = "Ready"
-	FlowCtrlPlan_Finished_Status   = "Finished"
+	TrafficCtrlTask_NotRunning_Status = "NotRunning"
+	TrafficCtrlTask_Running_Status    = "Running"
+	TrafficCtrlTask_Ready_Status      = "Ready"
+	TrafficCtrlTask_Finished_Status   = "Finished"
 
 	Version_Latest   = "Latest"
 	Version_Released = "Released"
@@ -96,4 +96,9 @@ const (
 	CrowdTargetType_Filter  = "Filter"
 	CrowdTargetType_CrowdId = "CrowdId"
 	CrowdTargetType_Random  = "Random"
+)
+
+const (
+	TrafficControlTargets_Status_Open  = "Opened"
+	TrafficControlTargets_Status_Close = "Closed"
 )

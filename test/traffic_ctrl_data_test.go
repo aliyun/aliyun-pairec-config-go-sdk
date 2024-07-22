@@ -8,7 +8,7 @@ import (
 
 func TestGetTrafficControlTaskMetaData(t *testing.T) {
 	client := CreateExperimentClient(common.Environment_Prepub_Desc)
-	plans := client.GetTrafficControlTaskMetaData("product", 0)
+	plans := client.GetTrafficControlTaskMetaData("prepub", 0)
 	fmt.Println("-----------")
 	for _, plan := range plans {
 		fmt.Printf("%++v\n", plan)

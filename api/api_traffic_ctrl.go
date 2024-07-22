@@ -54,13 +54,13 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 		listTrafficControlRequest.Environment = "Prod"
 	}
 
-	if localVarOptionals.Status.Value() == common.FlowCtrlPlan_NotRunning_Status {
+	if localVarOptionals.Status.Value() == common.TrafficCtrlTask_NotRunning_Status {
 		listTrafficControlRequest.Status = "NotRunning"
-	} else if localVarOptionals.Status.Value() == common.FlowCtrlPlan_Ready_Status {
+	} else if localVarOptionals.Status.Value() == common.TrafficCtrlTask_Ready_Status {
 		listTrafficControlRequest.Status = "Ready"
-	} else if localVarOptionals.Status.Value() == common.FlowCtrlPlan_Running_Status {
+	} else if localVarOptionals.Status.Value() == common.TrafficCtrlTask_Running_Status {
 		listTrafficControlRequest.Status = "Running"
-	} else if localVarOptionals.Status.Value() == common.FlowCtrlPlan_Finished_Status {
+	} else if localVarOptionals.Status.Value() == common.TrafficCtrlTask_Finished_Status {
 		listTrafficControlRequest.Status = "Finished"
 	}
 

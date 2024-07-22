@@ -3,6 +3,7 @@ package experiments
 import (
 	"fmt"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/api"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 	"github.com/antihax/optional"
 	"strconv"
@@ -80,7 +81,7 @@ func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, cu
 	trafficControlTargets := make(map[string]model.TrafficControlTarget)
 
 	data := e.productSceneTrafficControlTaskData
-	if env == "prepub" {
+	if env == common.Environment_Prepub_Desc {
 		data = e.prepubSceneTrafficControlTaskData
 	}
 
@@ -94,7 +95,7 @@ func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, cu
 				startTime, _ := time.Parse(time.RFC3339, target.StartTime)
 				endTime, _ := time.Parse(time.RFC3339, target.EndTime)
 
-				if target.Status == "Opened" && startTime.Unix() < currentTimestamp && currentTimestamp <= endTime.Unix() {
+				if target.Status == common.TrafficControlTargets_Status_Open && startTime.Unix() < currentTimestamp && currentTimestamp <= endTime.Unix() {
 					trafficControlTargets[target.TrafficControlTargetId] = traffic.TrafficControlTargets[i]
 				}
 			}
@@ -113,7 +114,7 @@ func (e *ExperimentClient) GetTrafficControlTaskMetaData(env string, currentTime
 
 	data := e.productSceneTrafficControlTaskData
 
-	if env == "prepub" {
+	if env == common.Environment_Prepub_Desc {
 		data = e.prepubSceneTrafficControlTaskData
 	}
 
@@ -122,9 +123,17 @@ func (e *ExperimentClient) GetTrafficControlTaskMetaData(env string, currentTime
 			startTime, _ := time.Parse(time.RFC3339, traffic.StartTime)
 			endTime, _ := time.Parse(time.RFC3339, traffic.EndTime)
 
-			if traffic.ProductStatus == "Running" && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
-				traffics = append(traffics, sceneTraffics[i])
+			if env == common.Environment_Product_Desc {
+				if traffic.ProductStatus == common.TrafficCtrlTask_Running_Status && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
+					traffics = append(traffics, sceneTraffics[i])
+				}
+			} else if env == common.Environment_Prepub_Desc {
+				if traffic.PrepubStatus == common.TrafficCtrlTask_Running_Status && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
+					traffics = append(traffics, sceneTraffics[i])
+				}
+
 			}
+
 		}
 	}
 	return traffics
@@ -136,7 +145,7 @@ func (e *ExperimentClient) CheckIfTrafficControlTargetIsEnabled(env string, targ
 	}
 
 	data := e.productSceneTrafficControlTaskData
-	if env == "prepub" {
+	if env == common.Environment_Prepub_Desc {
 		data = e.prepubSceneTrafficControlTaskData
 	}
 
@@ -151,7 +160,7 @@ func (e *ExperimentClient) CheckIfTrafficControlTargetIsEnabled(env string, targ
 					startTime, _ := time.Parse(time.RFC3339, target.StartTime)
 					endTime, _ := time.Parse(time.RFC3339, target.EndTime)
 
-					if target.Status == "Opened" && startTime.Unix() < currentTimestamp && currentTimestamp < endTime.Unix() {
+					if target.Status == common.TrafficControlTargets_Status_Open && startTime.Unix() < currentTimestamp && currentTimestamp < endTime.Unix() {
 						return true
 					}
 				}

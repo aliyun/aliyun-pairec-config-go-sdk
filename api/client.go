@@ -94,7 +94,7 @@ func NewAPIClient(instanceId, region, accessId, accessKey string) (*APIClient, e
 
 func (c *APIClient) GetDomain() string {
 	if c.domain == "" {
-		c.domain = fmt.Sprintf("pairecservice.%s.aliyuncs.com", c.region)
+		c.domain = fmt.Sprintf("pairecservice-vpc.%s.aliyuncs.com", c.region)
 	}
 
 	return c.domain

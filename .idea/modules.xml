@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project version="4">
-  <component name="ProjectModuleManager">
-    <modules>
-      <module fileurl="file://$USER_HOME$/Project/GoP/Demo1/.idea/Demo1.iml" filepath="$USER_HOME$/Project/GoP/Demo1/.idea/Demo1.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/aliyun-pairec-config-go-sdk.iml" filepath="$PROJECT_DIR$/.idea/aliyun-pairec-config-go-sdk.iml" />
-    </modules>
-  </component>
-</project>

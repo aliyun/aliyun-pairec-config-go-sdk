@@ -42,16 +42,16 @@ type ExperimentClient struct {
 	APIClient *api.APIClient
 
 	//
-	sceneMap map[string]*model.Scene
+	SceneMap map[string]*model.Scene
 
 	// sceneParamData map of parameters of scene name
 	sceneParamData map[string]model.SceneParams
 
 	// sceneFlowCtrlPlanData map of flow ctrl plan of scene name
-	sceneFlowCtrlPlanData map[string][]model.FlowCtrlPlan
+	productSceneTrafficControlTaskData map[string][]model.TrafficControlTask
 
 	// prepubSceneFlowCtrlPlanData map of flow ctrl plan of scene name (prepub env)
-	prepubSceneFlowCtrlPlanData map[string][]model.FlowCtrlPlan
+	prepubSceneTrafficControlTaskData map[string][]model.TrafficControlTask
 
 	// Logger specifies a logger used to report internal changes within the writer
 	Logger Logger
@@ -63,7 +63,7 @@ type ExperimentClient struct {
 func NewExperimentClient(instanceId, regionId, accessKeyId, accessKeySecret, environment string, opts ...ClientOption) (*ExperimentClient, error) {
 	client := ExperimentClient{
 		Environment: environment,
-		sceneMap:    make(map[string]*model.Scene, 0),
+		SceneMap:    make(map[string]*model.Scene, 0),
 	}
 
 	var err error
@@ -86,12 +86,8 @@ func NewExperimentClient(instanceId, regionId, accessKeyId, accessKeySecret, env
 	go client.loopLoadExperimentData()
 	go client.loopLoadSceneParamsData()
 
-	/**
-	if os.Getenv("CALLBACK") == "" {
-		client.LoadSceneFlowCtrlPlansData()
-		go client.loopLoadSceneFlowCtrlPlansData()
-	}
-	**/
+	client.LoadSceneTrafficControlTasksData()
+	go client.loopLoadSceneFlowCtrlPlansData()
 
 	return &client, nil
 }
@@ -110,7 +106,7 @@ func (e *ExperimentClient) Validate() error {
 // MatchExperiment specifies to find match experiment by the ExperimentContext
 // If not find the scene return error or return ExperimentResult
 func (e *ExperimentClient) MatchExperiment(sceneName string, experimentContext *model.ExperimentContext) *model.ExperimentResult {
-	sceneData := e.sceneMap
+	sceneData := e.SceneMap
 
 	scene, exist := sceneData[sceneName]
 

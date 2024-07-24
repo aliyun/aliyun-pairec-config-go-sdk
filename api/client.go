@@ -54,7 +54,7 @@ type APIClient struct {
 
 	CrowdApi *CrowdApiService
 
-	FlowCtrlApi *FlowCtrlApiService
+	TrafficControlApi *TrafficControlApiService
 
 	FeatureConsistencyCheckApi *FeatureConsistencyCheckService
 }
@@ -87,9 +87,8 @@ func NewAPIClient(instanceId, region, accessId, accessKey string) (*APIClient, e
 	c.SceneApi = (*SceneApiService)(&c.common)
 	c.ParamApi = (*ParamApiService)(&c.common)
 	c.CrowdApi = (*CrowdApiService)(&c.common)
-	c.FlowCtrlApi = (*FlowCtrlApiService)(&c.common)
+	c.TrafficControlApi = (*TrafficControlApiService)(&c.common)
 	c.FeatureConsistencyCheckApi = (*FeatureConsistencyCheckService)(&c.common)
-
 	return c, nil
 }
 

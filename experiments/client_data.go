@@ -125,7 +125,7 @@ func (e *ExperimentClient) LoadExperimentData() {
 		sceneData[scene.SceneName] = scene
 	}
 	if len(sceneData) > 0 {
-		e.sceneMap = sceneData
+		e.SceneMap = sceneData
 	}
 }
 

@@ -44,6 +44,18 @@ const (
 
 	CODE_OK                            = "OK"
 	Feature_Consistency_Job_Param_Name = "_feature_consistency_job_"
+
+	TrafficCtrlTask_NotRunning_Status = "NotRunning"
+	TrafficCtrlTask_Running_Status    = "Running"
+	TrafficCtrlTask_Ready_Status      = "Ready"
+	TrafficCtrlTask_Finished_Status   = "Finished"
+
+	Version_Latest   = "Latest"
+	Version_Released = "Released"
+
+	ControlTargetFilter_All   = "ALL"
+	ControlTargetFilter_Vaild = "Valid"
+	ControlTargetFilter_None  = "None"
 )
 
 var (
@@ -84,4 +96,9 @@ const (
 	CrowdTargetType_Filter  = "Filter"
 	CrowdTargetType_CrowdId = "CrowdId"
 	CrowdTargetType_Random  = "Random"
+)
+
+const (
+	TrafficControlTargets_Status_Open  = "Opened"
+	TrafficControlTargets_Status_Close = "Closed"
 )

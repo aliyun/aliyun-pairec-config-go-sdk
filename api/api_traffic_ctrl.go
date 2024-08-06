@@ -136,8 +136,8 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 			t.TrafficControlTaskId = trafficControlTask.TrafficControlTaskId
 			t.TrafficControlTargetId = target.TrafficControlTargetId
 			t.Name = target.Name
-			t.StartTime = trafficControlTask.StartTime
-			t.EndTime = trafficControlTask.EndTime
+			t.StartTime = target.StartTime
+			t.EndTime = target.EndTime
 			t.ItemConditionType = target.ItemConditionType
 			t.ItemConditionArray = target.ItemConditionArray
 			t.ItemConditionExpress = target.ItemConditionExpress

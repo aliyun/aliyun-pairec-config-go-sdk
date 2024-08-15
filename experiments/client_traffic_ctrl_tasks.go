@@ -80,9 +80,14 @@ func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, cu
 
 	trafficControlTargets := make(map[string]model.TrafficControlTarget)
 
-	data := e.productSceneTrafficControlTaskData
+	var data = make(map[string][]model.TrafficControlTask, 0)
+
 	if env == common.Environment_Prepub_Desc {
 		data = e.prepubSceneTrafficControlTaskData
+	} else if env == common.Environment_Product_Desc {
+		data = e.productSceneTrafficControlTaskData
+	} else {
+		return nil
 	}
 
 	for scene, sceneTraffics := range data {
@@ -123,10 +128,14 @@ func (e *ExperimentClient) GetTrafficControlTaskMetaData(env string, currentTime
 
 	traffics := make([]model.TrafficControlTask, 0)
 
-	data := e.productSceneTrafficControlTaskData
+	var data = make(map[string][]model.TrafficControlTask, 0)
 
 	if env == common.Environment_Prepub_Desc {
 		data = e.prepubSceneTrafficControlTaskData
+	} else if env == common.Environment_Product_Desc {
+		data = e.productSceneTrafficControlTaskData
+	} else {
+		return nil
 	}
 
 	for _, sceneTraffics := range data {
@@ -171,10 +180,14 @@ func (e *ExperimentClient) CheckIfTrafficControlTargetIsEnabled(env string, targ
 		currentTimestamp = time.Now().Unix()
 	}
 
-	data := e.productSceneTrafficControlTaskData
+	var data = make(map[string][]model.TrafficControlTask, 0)
 
 	if env == common.Environment_Prepub_Desc {
 		data = e.prepubSceneTrafficControlTaskData
+	} else if env == common.Environment_Product_Desc {
+		data = e.productSceneTrafficControlTaskData
+	} else {
+		return false
 	}
 
 	for _, sceneTraffics := range data {

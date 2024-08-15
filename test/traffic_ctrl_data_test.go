@@ -8,7 +8,7 @@ import (
 
 func TestGetTrafficControlTaskMetaData(t *testing.T) {
 	client := CreateExperimentClient(common.Environment_Prepub_Desc)
-	plans := client.GetTrafficControlTaskMetaData("product", 0)
+	plans := client.GetTrafficControlTaskMetaData("prepub", 0)
 	fmt.Println("-----------")
 	for _, plan := range plans {
 		fmt.Printf("%++v\n", plan)
@@ -54,7 +54,7 @@ func TestGetTrafficControlTargetTraffic(t *testing.T) {
 	//	fmt.Printf("requestId=%v\n", requestId)
 	//}
 
-	fmt.Println(client.GetTrafficControlTargetTraffic("prepub", "home_feed", ""))
+	fmt.Println(client.GetTrafficControlTargetTraffic("prepub", "home_feed", "ER4_L4"))
 	//idList := []string{"ER_ALL", "12345678", "unknown"}
 	//fmt.Printf("%+v\n", client.GetTrafficControlTargetTraffic("prepub", "test1", idList...))
 

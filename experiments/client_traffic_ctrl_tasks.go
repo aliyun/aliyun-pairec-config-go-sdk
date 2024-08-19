@@ -101,10 +101,6 @@ func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, cu
 					startTime, _ := time.Parse(time.RFC3339, target.StartTime)
 					endTime, _ := time.Parse(time.RFC3339, target.EndTime)
 
-					if startTime.Unix() >= endTime.Unix() {
-						e.logError(fmt.Errorf("The subtarget time for %s's traffic control task is incorrect. \n", task.Name))
-					}
-
 					if target.Status == common.TrafficControlTargets_Status_Open && startTime.Unix() < currentTimestamp && currentTimestamp <= endTime.Unix() {
 						trafficControlTargets[target.TrafficControlTargetId] = task.TrafficControlTargets[i]
 					}
@@ -143,10 +139,6 @@ func (e *ExperimentClient) GetTrafficControlTaskMetaData(env string, currentTime
 			if task.ExecutionTime != "Permanent" {
 				startTime, _ := time.Parse(time.RFC3339, task.StartTime)
 				endTime, _ := time.Parse(time.RFC3339, task.EndTime)
-
-				if startTime.Unix() >= endTime.Unix() {
-					e.logError(fmt.Errorf("The traffic control task time of %s is incorrect. \n", task.Name))
-				}
 
 				if env == common.Environment_Product_Desc {
 					if task.ProductStatus == common.TrafficCtrlTask_Running_Status && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
@@ -201,10 +193,6 @@ func (e *ExperimentClient) CheckIfTrafficControlTargetIsEnabled(env string, targ
 				if tid == targetId {
 					startTime, _ := time.Parse(time.RFC3339, target.StartTime)
 					endTime, _ := time.Parse(time.RFC3339, target.EndTime)
-
-					if startTime.Unix() >= endTime.Unix() {
-						e.logError(fmt.Errorf("The traffic control task time is incorrect. Procedure\n"))
-					}
 
 					if target.Status == common.TrafficControlTargets_Status_Open && startTime.Unix() < currentTimestamp && currentTimestamp < endTime.Unix() {
 						return true

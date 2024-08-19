@@ -54,7 +54,7 @@ func TestGetTrafficControlTargetTraffic(t *testing.T) {
 	//	fmt.Printf("requestId=%v\n", requestId)
 	//}
 
-	fmt.Println(client.GetTrafficControlTargetTraffic("prepub", "home_feed", "ER4_L4"))
+	fmt.Println(client.GetTrafficControlTargetTraffic("prepub", "home_feed", "ER1_L1_L6_L8_L10#EG16#E26"))
 	//idList := []string{"ER_ALL", "12345678", "unknown"}
 	//fmt.Printf("%+v\n", client.GetTrafficControlTargetTraffic("prepub", "test1", idList...))
 

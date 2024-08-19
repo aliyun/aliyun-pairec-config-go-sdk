@@ -22,7 +22,7 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 	}
 	prodResponse, err := e.APIClient.TrafficControlApi.ListTrafficControlTasks(prodOpt)
 	if err != nil {
-		e.logError(fmt.Errorf("list flow plans error, err=%v", err))
+		e.logError(fmt.Errorf("list flow tasks error, err=%v", err))
 		return
 	}
 
@@ -45,7 +45,7 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 	}
 	prePubResponse, _ := e.APIClient.TrafficControlApi.ListTrafficControlTasks(prePubOpt)
 	if err != nil {
-		e.logError(fmt.Errorf("list flow plans error,error=%v", err))
+		e.logError(fmt.Errorf("list flow tasks error,error=%v", err))
 		return
 	}
 
@@ -80,9 +80,14 @@ func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, cu
 
 	trafficControlTargets := make(map[string]model.TrafficControlTarget)
 
-	data := e.productSceneTrafficControlTaskData
+	var data = make(map[string][]model.TrafficControlTask, 0)
+
 	if env == common.Environment_Prepub_Desc {
 		data = e.prepubSceneTrafficControlTaskData
+	} else if env == common.Environment_Product_Desc {
+		data = e.productSceneTrafficControlTaskData
+	} else {
+		return nil
 	}
 
 	for scene, sceneTraffics := range data {
@@ -90,14 +95,21 @@ func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, cu
 			continue
 		}
 
-		for _, traffic := range sceneTraffics {
-			for i, target := range traffic.TrafficControlTargets {
-				startTime, _ := time.Parse(time.RFC3339, target.StartTime)
-				endTime, _ := time.Parse(time.RFC3339, target.EndTime)
+		for _, task := range sceneTraffics {
+			for i, target := range task.TrafficControlTargets {
+				if task.ExecutionTime != "Permanent" {
+					startTime, _ := time.Parse(time.RFC3339, target.StartTime)
+					endTime, _ := time.Parse(time.RFC3339, target.EndTime)
 
-				if target.Status == common.TrafficControlTargets_Status_Open && startTime.Unix() < currentTimestamp && currentTimestamp <= endTime.Unix() {
-					trafficControlTargets[target.TrafficControlTargetId] = traffic.TrafficControlTargets[i]
+					if target.Status == common.TrafficControlTargets_Status_Open && startTime.Unix() < currentTimestamp && currentTimestamp <= endTime.Unix() {
+						trafficControlTargets[target.TrafficControlTargetId] = task.TrafficControlTargets[i]
+					}
+				} else {
+					if target.Status == common.TrafficControlTargets_Status_Open {
+						trafficControlTargets[target.TrafficControlTargetId] = task.TrafficControlTargets[i]
+					}
 				}
+
 			}
 		}
 	}
@@ -112,26 +124,42 @@ func (e *ExperimentClient) GetTrafficControlTaskMetaData(env string, currentTime
 
 	traffics := make([]model.TrafficControlTask, 0)
 
-	data := e.productSceneTrafficControlTaskData
+	var data = make(map[string][]model.TrafficControlTask, 0)
 
 	if env == common.Environment_Prepub_Desc {
 		data = e.prepubSceneTrafficControlTaskData
+	} else if env == common.Environment_Product_Desc {
+		data = e.productSceneTrafficControlTaskData
+	} else {
+		return nil
 	}
 
 	for _, sceneTraffics := range data {
-		for i, traffic := range sceneTraffics {
-			startTime, _ := time.Parse(time.RFC3339, traffic.StartTime)
-			endTime, _ := time.Parse(time.RFC3339, traffic.EndTime)
+		for i, task := range sceneTraffics {
+			if task.ExecutionTime != "Permanent" {
+				startTime, _ := time.Parse(time.RFC3339, task.StartTime)
+				endTime, _ := time.Parse(time.RFC3339, task.EndTime)
 
-			if env == common.Environment_Product_Desc {
-				if traffic.ProductStatus == common.TrafficCtrlTask_Running_Status && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
-					traffics = append(traffics, sceneTraffics[i])
-				}
-			} else if env == common.Environment_Prepub_Desc {
-				if traffic.PrepubStatus == common.TrafficCtrlTask_Running_Status && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
-					traffics = append(traffics, sceneTraffics[i])
-				}
+				if env == common.Environment_Product_Desc {
+					if task.ProductStatus == common.TrafficCtrlTask_Running_Status && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
+						traffics = append(traffics, sceneTraffics[i])
+					}
+				} else if env == common.Environment_Prepub_Desc {
+					if task.PrepubStatus == common.TrafficCtrlTask_Running_Status && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
+						traffics = append(traffics, sceneTraffics[i])
+					}
 
+				}
+			} else {
+				if env == common.Environment_Product_Desc {
+					if task.ProductStatus == common.TrafficCtrlTask_Running_Status {
+						traffics = append(traffics, sceneTraffics[i])
+					}
+				} else if env == common.Environment_Prepub_Desc {
+					if task.PrepubStatus == common.TrafficCtrlTask_Running_Status {
+						traffics = append(traffics, sceneTraffics[i])
+					}
+				}
 			}
 
 		}
@@ -144,9 +172,14 @@ func (e *ExperimentClient) CheckIfTrafficControlTargetIsEnabled(env string, targ
 		currentTimestamp = time.Now().Unix()
 	}
 
-	data := e.productSceneTrafficControlTaskData
+	var data = make(map[string][]model.TrafficControlTask, 0)
+
 	if env == common.Environment_Prepub_Desc {
 		data = e.prepubSceneTrafficControlTaskData
+	} else if env == common.Environment_Product_Desc {
+		data = e.productSceneTrafficControlTaskData
+	} else {
+		return false
 	}
 
 	for _, sceneTraffics := range data {
@@ -156,6 +189,7 @@ func (e *ExperimentClient) CheckIfTrafficControlTargetIsEnabled(env string, targ
 				if err != nil {
 					e.logError(fmt.Errorf("traffic control targetId is illegal"))
 				}
+
 				if tid == targetId {
 					startTime, _ := time.Parse(time.RFC3339, target.StartTime)
 					endTime, _ := time.Parse(time.RFC3339, target.EndTime)

@@ -17,7 +17,7 @@ func TestGetTrafficControlTaskMetaData(t *testing.T) {
 
 func TestGetTrafficControlTargetData(t *testing.T) {
 	client := CreateExperimentClient(common.Environment_Prepub_Desc)
-	targets := client.GetTrafficControlTargetData("prepub", "", 0)
+	targets := client.GetTrafficControlTargetData("product", "", 0)
 	for targetId, target := range targets {
 		fmt.Printf("%s %+v\n", targetId, target)
 	}
@@ -25,7 +25,7 @@ func TestGetTrafficControlTargetData(t *testing.T) {
 
 func TestCheckIfTrafficControlTargetIsEnabled(t *testing.T) {
 	client := CreateExperimentClient(common.Environment_Prepub_Desc)
-	enabled := client.CheckIfTrafficControlTargetIsEnabled("prepub", 45, 0)
+	enabled := client.CheckIfTrafficControlTargetIsEnabled("product", 1, 0)
 	fmt.Println(enabled)
 }
 
@@ -54,7 +54,7 @@ func TestGetTrafficControlTargetTraffic(t *testing.T) {
 	//	fmt.Printf("requestId=%v\n", requestId)
 	//}
 
-	fmt.Println(client.GetTrafficControlTargetTraffic("prepub", "HomePage", "9001"))
+	fmt.Println(client.GetTrafficControlTargetTraffic("prepub", "home_feed", "ER1_L1_L6_L8_L10#EG16#E26"))
 	//idList := []string{"ER_ALL", "12345678", "unknown"}
 	//fmt.Printf("%+v\n", client.GetTrafficControlTargetTraffic("prepub", "test1", idList...))
 

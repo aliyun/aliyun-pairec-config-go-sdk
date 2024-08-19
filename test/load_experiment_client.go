@@ -7,7 +7,7 @@ import (
 )
 
 func CreateExperimentClient(environment string) *experiments.ExperimentClient {
-	region := "cn-hangzhou"
+	region := "cn-shanghai"
 	instanceId := os.Getenv("INSTANCE_ID")
 	accessId := os.Getenv("ACCESS_ID")
 	accessKey := os.Getenv("ACCESS_KEY")
@@ -15,7 +15,7 @@ func CreateExperimentClient(environment string) *experiments.ExperimentClient {
 	//preAddress :=
 	client, err := experiments.NewExperimentClient(instanceId, region, accessId, accessKey, environment,
 		experiments.WithLogger(experiments.LoggerFunc(log.Printf)),
-		experiments.WithDomain("pairecservice-pre.cn-hangzhou.aliyuncs.com"))
+		experiments.WithDomain("pairecservice.cn-shanghai.aliyuncs.com"))
 
 	if err != nil {
 		log.Fatal(err)

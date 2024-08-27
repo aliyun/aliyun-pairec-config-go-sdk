@@ -34,7 +34,7 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 		e.productSceneTrafficControlTaskData = prodSceneTrafficControlTasksData
 	}
 
-	// Load traffic control data for the pre-load environment
+	//Load traffic control data for the pre-load environment
 	prepubSceneTrafficControlTasksData := make(map[string][]model.TrafficControlTask, 0)
 	prePubOpt := &api.TrafficControlApiListTrafficControlTasksOpts{
 		ALL:                 optional.NewBool(true),
@@ -104,6 +104,7 @@ func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, cu
 					if target.Status == common.TrafficControlTargets_Status_Open && startTime.Unix() < currentTimestamp && currentTimestamp <= endTime.Unix() {
 						trafficControlTargets[target.TrafficControlTargetId] = task.TrafficControlTargets[i]
 					}
+
 				} else {
 					if target.Status == common.TrafficControlTargets_Status_Open {
 						trafficControlTargets[target.TrafficControlTargetId] = task.TrafficControlTargets[i]

@@ -17,7 +17,7 @@ func TestGetTrafficControlTaskMetaData(t *testing.T) {
 
 func TestGetTrafficControlTargetData(t *testing.T) {
 	client := CreateExperimentClient(common.Environment_Prepub_Desc)
-	targets := client.GetTrafficControlTargetData("product", "", 0)
+	targets := client.GetTrafficControlTargetData("prepub", "", 0)
 	for targetId, target := range targets {
 		fmt.Printf("%s %+v\n", targetId, target)
 	}

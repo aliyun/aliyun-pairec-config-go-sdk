@@ -68,10 +68,12 @@ type service struct {
 // optionally a custom http.Client to allow for advanced features such as caching.
 func NewAPIClient(instanceId, region, accessId, accessKey string) (*APIClient, error) {
 	client, err := pairecservice.NewClientWithAccessKey(region, accessId, accessKey)
+
 	if err != nil {
 		return nil, err
 	}
 	client.SetTransport(defaultTransport)
+
 	c := &APIClient{
 		Client: client,
 		region: region,

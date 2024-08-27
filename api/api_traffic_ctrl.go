@@ -131,28 +131,6 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 		trafficControlTargetsMap := make(map[string]model.TrafficControlTarget)
 
 		// List of storage traffic control targets
-		for _, target := range trafficControlTask.TrafficControlTargets {
-			var t model.TrafficControlTarget
-			t.TrafficControlTaskId = trafficControlTask.TrafficControlTaskId
-			t.TrafficControlTargetId = target.TrafficControlTargetId
-			t.Name = target.Name
-			t.StartTime = target.StartTime
-			t.EndTime = target.EndTime
-			t.ItemConditionType = target.ItemConditionType
-			t.ItemConditionArray = target.ItemConditionArray
-			t.ItemConditionExpress = target.ItemConditionExpress
-			t.Event = target.Event
-			t.Value = target.Value
-			t.StatisPeriod = target.StatisPeriod
-			t.ToleranceValue = target.ToleranceValue
-			t.NewProductRegulation = target.NewProductRegulation
-			t.RecallName = target.RecallName
-			t.Status = target.Status
-			t.SplitParts = target.SplitParts
-			t.GmtCreateTime = target.GmtCreateTime
-			t.GmtModifiedTime = target.GmtModifiedTime
-			trafficControlTargetsMap[target.TrafficControlTargetId] = t
-		}
 
 		behaviorTableMetaRequest := pairecservice.CreateGetTableMetaRequest()
 		behaviorTableMetaRequest.TableMetaId = trafficControlTask.BehaviorTableMetaId
@@ -232,37 +210,61 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 			Fields:          itemTableMeta.Fields,
 		}
 
-		//Obtain traffic details about a traffic control task
-		trafficControlTaskTrafficRequest := pairecservice.CreateGetTrafficControlTaskTrafficRequest()
-		trafficControlTaskTrafficRequest.TrafficControlTaskId = task.TrafficControlTaskId
-		trafficControlTaskTrafficRequest.InstanceId = fca.instanceId
-		trafficControlTaskTrafficRequest.Environment = listTrafficControlRequest.Environment
-		trafficControlTaskTrafficRequest.SetDomain(fca.client.GetDomain())
-		tResponse, err := fca.client.common.client.GetTrafficControlTaskTraffic(trafficControlTaskTrafficRequest)
+		for _, target := range trafficControlTask.TrafficControlTargets {
+			var t model.TrafficControlTarget
+			t.TrafficControlTaskId = trafficControlTask.TrafficControlTaskId
+			t.TrafficControlTargetId = target.TrafficControlTargetId
+			t.Name = target.Name
+			t.StartTime = target.StartTime
+			t.EndTime = target.EndTime
+			t.ItemConditionType = target.ItemConditionType
+			t.ItemConditionArray = target.ItemConditionArray
+			t.ItemConditionExpress = target.ItemConditionExpress
+			t.Event = target.Event
+			t.Value = target.Value
+			t.StatisPeriod = target.StatisPeriod
+			t.ToleranceValue = target.ToleranceValue
+			t.NewProductRegulation = target.NewProductRegulation
+			t.RecallName = target.RecallName
+			t.Status = target.Status
+			t.SplitParts = target.SplitParts
+			t.GmtCreateTime = target.GmtCreateTime
+			t.GmtModifiedTime = target.GmtModifiedTime
+			trafficControlTargetsMap[target.TrafficControlTargetId] = t
 
-		if err != nil {
-			return localVarReturnValue, err
-		}
+			//Obtain traffic details about a traffic control task
+			trafficControlTaskTrafficRequest := pairecservice.CreateGetTrafficControlTaskTrafficRequest()
+			trafficControlTaskTrafficRequest.TrafficControlTaskId = task.TrafficControlTaskId
+			trafficControlTaskTrafficRequest.InstanceId = fca.instanceId
+			trafficControlTaskTrafficRequest.Environment = listTrafficControlRequest.Environment
+			trafficControlTaskTrafficRequest.SetDomain(fca.client.GetDomain())
+			tResponse, err := fca.client.common.client.GetTrafficControlTaskTraffic(trafficControlTaskTrafficRequest)
 
-		traffic := tResponse.TrafficControlTaskTrafficInfo
-
-		for _, targetTraffic := range traffic.TargetTraffics {
-			if len(tResponse.TrafficControlTaskTrafficInfo.TaskTraffics) == 0 || len(tResponse.TrafficControlTaskTrafficInfo.TargetTraffics) == 0 {
-				continue
+			if err != nil {
+				return localVarReturnValue, err
 			}
-			taskTraffics := make(map[string]float64)
-			targetTraffics := make(map[string]float64)
 
-			toSetTraffic := trafficControlTargetsMap[targetTraffic.TrafficContorlTargetId]
-			for k, v := range traffic.TaskTraffics {
-				taskTraffics[k] = v.(float64)
+			traffic := tResponse.TrafficControlTaskTrafficInfo
+
+			for _, targetTraffic := range traffic.TargetTraffics {
+
+				if len(tResponse.TrafficControlTaskTrafficInfo.TaskTraffics) == 0 || len(tResponse.TrafficControlTaskTrafficInfo.TargetTraffics) == 0 {
+					continue
+				}
+				taskTraffics := make(map[string]float64)
+				targetTraffics := make(map[string]float64)
+
+				toSetTraffic := trafficControlTargetsMap[targetTraffic.TrafficContorlTargetId]
+				for k, v := range traffic.TaskTraffics {
+					taskTraffics[k] = v.(float64)
+				}
+				toSetTraffic.TaskTraffics = taskTraffics
+				for k, v := range targetTraffic.Data[0] {
+					targetTraffics[k] = v.(float64)
+				}
+				toSetTraffic.TargetTraffics = targetTraffics
+				trafficControlTargetsMap[toSetTraffic.TrafficControlTargetId] = toSetTraffic
 			}
-			toSetTraffic.TaskTraffics = taskTraffics
-			for k, v := range targetTraffic.Data[0] {
-				targetTraffics[k] = v.(float64)
-			}
-			toSetTraffic.TargetTraffics = targetTraffics
-			trafficControlTargetsMap[toSetTraffic.TrafficControlTargetId] = toSetTraffic
 		}
 
 		for _, target := range trafficControlTargetsMap {

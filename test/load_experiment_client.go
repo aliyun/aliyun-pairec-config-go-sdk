@@ -8,14 +8,15 @@ import (
 
 func CreateExperimentClient(environment string) *experiments.ExperimentClient {
 	region := "cn-shanghai"
-	instanceId := os.Getenv("INSTANCE_ID")
+
 	accessId := os.Getenv("ACCESS_ID")
 	accessKey := os.Getenv("ACCESS_KEY")
-	//address := "pairecservice.cn-hangzhou.aliyuncs.com"
-	//preAddress :=
+	instanceId := os.Getenv("INSTANCE_ID")
+	address := "pairecservice." + region + ".aliyuncs.com"
+	//preAddress := "pairecservice-pre." + region + ".aliyuncs.com"
 	client, err := experiments.NewExperimentClient(instanceId, region, accessId, accessKey, environment,
 		experiments.WithLogger(experiments.LoggerFunc(log.Printf)),
-		experiments.WithDomain("pairecservice.cn-shanghai.aliyuncs.com"))
+		experiments.WithDomain(address))
 
 	if err != nil {
 		log.Fatal(err)

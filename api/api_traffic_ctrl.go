@@ -254,16 +254,19 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 				taskTraffics := make(map[string]float64)
 				targetTraffics := make(map[string]float64)
 
-				toSetTraffic := trafficControlTargetsMap[targetTraffic.TrafficContorlTargetId]
+				tempTarget, ok := trafficControlTargetsMap[targetTraffic.TrafficContorlTargetId]
+				if !ok {
+					continue
+				}
 				for k, v := range traffic.TaskTraffics {
 					taskTraffics[k] = v.(float64)
 				}
-				toSetTraffic.TaskTraffics = taskTraffics
+				tempTarget.TaskTraffics = taskTraffics
 				for k, v := range targetTraffic.Data[0] {
 					targetTraffics[k] = v.(float64)
 				}
-				toSetTraffic.TargetTraffics = targetTraffics
-				trafficControlTargetsMap[toSetTraffic.TrafficControlTargetId] = toSetTraffic
+				tempTarget.TargetTraffics = targetTraffics
+				trafficControlTargetsMap[tempTarget.TrafficControlTargetId] = tempTarget
 			}
 		}
 

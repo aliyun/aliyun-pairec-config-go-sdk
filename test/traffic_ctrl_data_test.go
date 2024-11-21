@@ -9,16 +9,33 @@ import (
 func TestGetTrafficControlTaskMetaData(t *testing.T) {
 	client := CreateExperimentClient(common.Environment_Prepub_Desc)
 	plans := client.GetTrafficControlTaskMetaData("prepub", 0)
-	fmt.Println("-----------")
+
 	for _, plan := range plans {
-		fmt.Printf("%++v\n", plan)
+		fmt.Printf("---【Prepub task】---%s,%s\n", plan.TrafficControlTaskId, plan.Name)
+		for _, target := range plan.TrafficControlTargets {
+			fmt.Printf("---【Prepub target】----%s，%s\n", target.TrafficControlTargetId, target.Name)
+		}
+	}
+
+	proPlans := client.GetTrafficControlTaskMetaData("product", 0)
+
+	for _, plan := range proPlans {
+		fmt.Printf("---【Product task】---%s,%s\n", plan.TrafficControlTaskId, plan.Name)
+		for _, target := range plan.TrafficControlTargets {
+			fmt.Printf("---【Product target】----%s，%s\n", target.TrafficControlTargetId, target.Name)
+		}
 	}
 }
 
 func TestGetTrafficControlTargetData(t *testing.T) {
 	client := CreateExperimentClient(common.Environment_Prepub_Desc)
-	targets := client.GetTrafficControlTargetData("prepub", "", 0)
-	for targetId, target := range targets {
+	preTargets := client.GetTrafficControlTargetData("prepub", "", 0)
+	for targetId, target := range preTargets {
+		fmt.Printf("%s %+v\n", targetId, target)
+	}
+
+	proTargets := client.GetTrafficControlTargetData("product", "", 0)
+	for targetId, target := range proTargets {
 		fmt.Printf("%s %+v\n", targetId, target)
 	}
 }

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/pairecservice"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
@@ -258,14 +259,24 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 				if !ok {
 					continue
 				}
-				for k, v := range traffic.TaskTraffics {
-					taskTraffics[k] = v.(float64)
+
+				for targetId, trafficDetails := range traffic.TaskTraffics {
+
+					taskTraffic := make(map[string]float64, 0)
+					trafficDet, _ := json.Marshal(trafficDetails)
+					_ = json.Unmarshal(trafficDet, &taskTraffic)
+					taskTraffics[targetId] = taskTraffic["Traffic"]
 				}
 				tempTarget.TaskTraffics = taskTraffics
-				for k, v := range targetTraffic.Data[0] {
-					targetTraffics[k] = v.(float64)
+				//targetTraffic.Data 由 array -> map
+				for targetId, targetTrafficDetails := range targetTraffic.Data {
+					targetTrafficNew := make(map[string]float64, 0)
+					targetTrafficDet, _ := json.Marshal(targetTrafficDetails)
+					_ = json.Unmarshal(targetTrafficDet, &targetTrafficNew)
+					targetTraffics[targetId] = targetTrafficNew["Traffic"]
 				}
 				tempTarget.TargetTraffics = targetTraffics
+
 				trafficControlTargetsMap[tempTarget.TrafficControlTargetId] = tempTarget
 			}
 		}
@@ -279,6 +290,15 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 
 	localVarReturnValue.TrafficControlTasks = trafficControlTaskArray
 	return localVarReturnValue, nil
+}
+
+type TaskTraffic struct {
+	PlanTraffic float64 `json:"plan_traffic"`
+}
+
+type TargetTraffic struct {
+	TargetTraffic float64 `json:"target_traffic"`
+	RecordTime    int64   `json:"record_time"`
 }
 
 func (tct *TrafficControlApiService) SetTrafficControlTrafficFData(t model.TrafficControlTaskTrafficData) (string, error) {

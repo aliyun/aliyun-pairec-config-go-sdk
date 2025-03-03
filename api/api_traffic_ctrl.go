@@ -9,6 +9,7 @@ import (
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 	"github.com/antihax/optional"
 	jsoniter "github.com/json-iterator/go"
+	"time"
 )
 
 // Linger please
@@ -261,22 +262,24 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 				}
 
 				for targetId, trafficDetails := range traffic.TaskTraffics {
-
 					taskTraffic := make(map[string]float64, 0)
 					trafficDet, _ := json.Marshal(trafficDetails)
 					_ = json.Unmarshal(trafficDet, &taskTraffic)
 					taskTraffics[targetId] = taskTraffic["Traffic"]
+
 				}
 				tempTarget.TaskTraffics = taskTraffics
 				//targetTraffic.Data 由 array -> map
+				var recordTime int64
 				for targetId, targetTrafficDetails := range targetTraffic.Data {
 					targetTrafficNew := make(map[string]float64, 0)
 					targetTrafficDet, _ := json.Marshal(targetTrafficDetails)
 					_ = json.Unmarshal(targetTrafficDet, &targetTrafficNew)
 					targetTraffics[targetId] = targetTrafficNew["Traffic"]
+					recordTime = int64(targetTrafficNew["RecordTime"])
 				}
 				tempTarget.TargetTraffics = targetTraffics
-
+				tempTarget.RecordTime = time.Unix(recordTime, 0)
 				trafficControlTargetsMap[tempTarget.TrafficControlTargetId] = tempTarget
 			}
 		}

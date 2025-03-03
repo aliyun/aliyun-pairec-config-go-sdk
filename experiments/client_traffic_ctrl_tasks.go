@@ -206,11 +206,12 @@ func (e *ExperimentClient) CheckIfTrafficControlTargetIsEnabled(env string, targ
 }
 
 type TrafficControlTargetTraffic struct {
-	ItemOrExpId            string  `json:"item_or_exp_id"`
-	TrafficControlTaskId   string  `json:"traffic_control_task_id"`
-	TrafficControlTargetId string  `json:"traffic_control_target_id"`
-	TargetTraffic          float64 `json:"target_traffic"`
-	TaskTraffic            float64 `json:"task_traffic"`
+	ItemOrExpId            string    `json:"item_or_exp_id"`
+	TrafficControlTaskId   string    `json:"traffic_control_task_id"`
+	TrafficControlTargetId string    `json:"traffic_control_target_id"`
+	TargetTraffic          float64   `json:"target_traffic"`
+	TaskTraffic            float64   `json:"task_traffic"`
+	RecordTime             time.Time `json:"record_time"`
 }
 
 func (e *ExperimentClient) GetTrafficControlTargetTraffic(env, sceneName string, idList ...string) []TrafficControlTargetTraffic {
@@ -235,6 +236,7 @@ func (e *ExperimentClient) GetTrafficControlTargetTraffic(env, sceneName string,
 					TrafficControlTargetId: trafficTarget.TrafficControlTargetId,
 					TargetTraffic:          value,
 					TaskTraffic:            trafficTarget.TaskTraffics[id],
+					RecordTime:             trafficTarget.RecordTime,
 				})
 			}
 		}

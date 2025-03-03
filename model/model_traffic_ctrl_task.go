@@ -1,6 +1,9 @@
 package model
 
-import "github.com/aliyun/alibaba-cloud-sdk-go/services/pairecservice"
+import (
+	"github.com/aliyun/alibaba-cloud-sdk-go/services/pairecservice"
+	"time"
+)
 
 type TrafficControlTask struct {
 	TrafficControlTaskId string `json:"TrafficControlTaskId" xml:"TrafficControlTaskId"`
@@ -62,4 +65,5 @@ type TrafficControlTarget struct {
 
 	TaskTraffics   map[string]float64 `json:"task_traffics"`
 	TargetTraffics map[string]float64 `json:"target_traffics"`
+	RecordTime     time.Time          `json:"record_time"`
 }

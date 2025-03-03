@@ -16,6 +16,6 @@ require (
 )
 
 require (
-	github.com/aliyun/alibaba-cloud-sdk-go v1.63.0
+	github.com/aliyun/alibaba-cloud-sdk-go v1.63.91
 	github.com/json-iterator/go v1.1.12
 )

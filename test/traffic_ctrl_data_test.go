@@ -50,29 +50,29 @@ func TestGetTrafficControlTargetTraffic(t *testing.T) {
 	client := CreateExperimentClient(common.Environment_Prepub_Desc)
 	//var trafficsArray []model.TrafficData
 	//traffics := model.TrafficData{
-	//	TrafficControlTargetId:         "47",
-	//	RecordTime:                     "2024-07-21 T13:05:06.111Z",
-	//	ItemOrExperimentId:             "",
-	//	TrafficControlTargetTraffic:    *big.NewInt(20000),
+	//	TrafficControlTargetId:         "2",
+	//	RecordTime:                     "2025-02-26 T17:21:06.111Z",
+	//	ItemOrExperimentId:             "ER_ALL",
+	//	TrafficControlTargetTraffic:    *big.NewInt(500),
 	//	TrafficControlTargetAimTraffic: 100.0,
-	//	TrafficControlTaskTraffic:      *big.NewInt(10000),
+	//	TrafficControlTaskTraffic:      *big.NewInt(1000),
 	//}
 	//trafficsArray = append(trafficsArray, traffics)
 	//trafficsData := model.TrafficControlTaskTrafficData{
-	//	TrafficControlTaskId: "57",
+	//	TrafficControlTaskId: "2",
 	//	Traffics:             trafficsArray,
 	//	Environment:          "Pre",
 	//}
 	//requestId, err := client.SetTrafficControlTraffic(trafficsData)
-
+	//
 	//if err != nil {
 	//	fmt.Printf("err=%v\n", err)
 	//} else {
 	//	fmt.Printf("requestId=%v\n", requestId)
 	//}
 
-	fmt.Println(client.GetTrafficControlTargetTraffic("prepub", "home_feed", "ER1_L1_L6_L8_L10#EG16#E26"))
-	//idList := []string{"ER_ALL", "12345678", "unknown"}
-	//fmt.Printf("%+v\n", client.GetTrafficControlTargetTraffic("prepub", "test1", idList...))
+	fmt.Println(client.GetTrafficControlTargetTraffic("prepub", "test_kw", "item1"))
+	idList := []string{"item2", "item3"}
+	fmt.Printf("%+v\n", client.GetTrafficControlTargetTraffic("prepub", "test_kw", idList...))
 
 }

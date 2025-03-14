@@ -5,7 +5,7 @@ type FeatureConsistencyJob struct {
 	JobName                              string `json:"job_name,omitempty"`
 	SceneId                              int    `json:"scene_id"`
 	SampleRate                           int    `json:"sample_rate"`
-	ModelType                            int    `json:"model_type"`
+	ModelType                            string `json:"model_type"`
 	FeatureBackflowQueueType             string `json:"feature_backflow_queue_type"`
 	FeatureBackflowQueueDatahubAccessId  string `json:"feature_backflow_queue_datahub_access_id,omitempty"`
 	FeatureBackflowQueueDatahubAccessKey string `json:"feature_backflow_queue_datahub_access_key,omitempty"`

@@ -54,6 +54,7 @@ func TestFeatureConsistencyBackflow(t *testing.T) {
 		UserFeatures:                       "",
 		LogRequestId:                       "1130c79b-4375-4288-8b00-e575d645554f",
 		SceneName:                          "home_feed",
+		ServiceName:                        "embedding_recall",
 	}
 	resp, err := client.BackflowFeatureConsistencyCheckJobData(&backflowData)
 	if err != nil {

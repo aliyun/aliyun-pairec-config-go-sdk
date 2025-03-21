@@ -11,4 +11,5 @@ type FeatureConsistencyBackflowData struct {
 	UserFeatures                       string `json:"UserFeatures,omitempty"`
 	ItemFeatures                       string `json:"ItemFeatures,omitempty"`
 	LogRequestTime                     int64  `json:"LogRequestTime,omitempty"`
+	ServiceName                        string `json:"ServiceName,omitempty"`
 }

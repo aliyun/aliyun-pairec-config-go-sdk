@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/aliyun/alibaba-cloud-sdk-go/sdk"
+	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/auth/credentials"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/pairecservice"
 )
 
@@ -67,7 +69,18 @@ type service struct {
 // NewAPIClient creates a new API client. Requires a userAgent string describing your application.
 // optionally a custom http.Client to allow for advanced features such as caching.
 func NewAPIClient(instanceId, region, accessId, accessKey string) (*APIClient, error) {
-	client, err := pairecservice.NewClientWithAccessKey(region, accessId, accessKey)
+	var (
+		client *pairecservice.Client
+		err    error
+	)
+	if accessId == "" || accessKey == "" {
+		defaultProvider := credentials.NewDefaultCredentialsProvider()
+		sdkConfig := sdk.NewConfig()
+		sdkConfig.Scheme = "https"
+		client, err = pairecservice.NewClientWithOptions(region, sdkConfig, defaultProvider)
+	} else {
+		client, err = pairecservice.NewClientWithAccessKey(region, accessId, accessKey)
+	}
 
 	if err != nil {
 		return nil, err

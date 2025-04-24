@@ -7,7 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/auth/credentials/provider"
+	"github.com/aliyun/alibaba-cloud-sdk-go/sdk"
+	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/auth/credentials"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/pairecservice"
 )
 
@@ -73,15 +74,10 @@ func NewAPIClient(instanceId, region, accessId, accessKey string) (*APIClient, e
 		err    error
 	)
 	if accessId == "" || accessKey == "" {
-		/**
-		provider := credentials.NewDefaultCredentialsProvider()
-		cc, err1 := provider.GetCredentials()
-		if err1 != nil {
-			return nil, err1
-		}
-			**/
-
-		client, err = pairecservice.NewClientWithProvider(region, provider.DefaultChain)
+		defaultProvider := credentials.NewDefaultCredentialsProvider()
+		sdkConfig := sdk.NewConfig()
+		sdkConfig.Scheme = "https"
+		client, err = pairecservice.NewClientWithOptions(region, sdkConfig, defaultProvider)
 	} else {
 		client, err = pairecservice.NewClientWithAccessKey(region, accessId, accessKey)
 	}

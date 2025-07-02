@@ -4,14 +4,19 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
+	"github.com/alibabacloud-go/tea/tea"
 	"hash/fnv"
 	"strconv"
 	"time"
 
+	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
+	pairecservice20221213 "github.com/alibabacloud-go/pairecservice-20221213/v3/client"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/api"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 )
+
+var PAIRecEndpoint = "pairecservice.%s.aliyuncs.com"
 
 type ClientOption func(c *ExperimentClient)
 
@@ -41,6 +46,11 @@ type ExperimentClient struct {
 	// APIClient invoke api to connect to pairecservice open api
 	APIClient *api.APIClient
 
+	// open api v2
+	APIClientV2 *pairecservice20221213.Client
+
+	InstanceId string
+
 	//
 	SceneMap map[string]*model.Scene
 
@@ -64,6 +74,7 @@ func NewExperimentClient(instanceId, regionId, accessKeyId, accessKeySecret, env
 	client := ExperimentClient{
 		Environment: environment,
 		SceneMap:    make(map[string]*model.Scene, 0),
+		InstanceId:  instanceId,
 	}
 
 	var err error
@@ -71,6 +82,20 @@ func NewExperimentClient(instanceId, regionId, accessKeyId, accessKeySecret, env
 	if err != nil {
 		return nil, err
 	}
+
+	config := &openapi.Config{
+		AccessKeyId:     tea.String(accessKeyId),
+		AccessKeySecret: tea.String(accessKeySecret),
+	}
+
+	endpoint := fmt.Sprintf(PAIRecEndpoint, regionId)
+	config.Endpoint = tea.String(endpoint)
+
+	clientV2, err := pairecservice20221213.NewClient(config)
+	if err != nil {
+		return nil, err
+	}
+	client.APIClientV2 = clientV2
 
 	for _, opt := range opts {
 		opt(&client)

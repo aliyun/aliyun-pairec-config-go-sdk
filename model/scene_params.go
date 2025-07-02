@@ -14,6 +14,8 @@ type SceneParams interface {
 
 	AddParams(params map[string]interface{})
 
+	ListParams() map[string]interface{}
+
 	Get(key string, defaultValue interface{}) interface{}
 
 	GetString(key, defaultValue string) string
@@ -49,6 +51,10 @@ func (r *sceneParams) AddParams(params map[string]interface{}) {
 	for k, v := range params {
 		r.AddParam(k, v)
 	}
+}
+
+func (r *sceneParams) ListParams() map[string]interface{} {
+	return r.Parameters
 }
 
 func (r *sceneParams) GetFeatureConsistencyJobs() []*FeatureConsistencyJob {
@@ -171,6 +177,10 @@ func NewEmptySceneParams() *emptySceneParams {
 func (r *emptySceneParams) AddParam(key string, value interface{}) {}
 
 func (r *emptySceneParams) AddParams(params map[string]interface{}) {}
+
+func (r *emptySceneParams) ListParams() map[string]interface{} {
+	return map[string]interface{}{}
+}
 
 func (r *emptySceneParams) Get(key string, defaultValue interface{}) interface{} {
 	return defaultValue

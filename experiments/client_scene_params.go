@@ -2,11 +2,12 @@ package experiments
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/api"
+	pairecservice20221213 "github.com/alibabacloud-go/pairecservice-20221213/v3/client"
+	"github.com/alibabacloud-go/tea/tea"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
-	"github.com/antihax/optional"
 )
 
 // LoadSceneParamsData specifies a function to load param data from A/B Test Server
@@ -21,15 +22,21 @@ func (e *ExperimentClient) LoadSceneParamsData() {
 
 	for _, scene := range listScenesResponse.Scenes {
 		sceneParams := model.NewSceneParams()
-		listParamsResponse, err := e.APIClient.ParamApi.GetParam(scene.SceneId,
-			&api.ParamApiGetParamOpts{Environment: optional.NewString(e.Environment)})
+		listParamsRequest := &pairecservice20221213.ListParamsRequest{}
+		listParamsRequest.Environment = tea.String(e.Environment)
+		listParamsRequest.SceneId = tea.String(strconv.FormatInt(scene.SceneId, 10))
+		listParamsRequest.Encrypted = tea.Bool(true)
+		listParamsRequest.InstanceId = tea.String(e.InstanceId)
+
+		paramResponse, err := e.APIClientV2.ListParams(listParamsRequest)
 
 		if err != nil {
 			e.logError(fmt.Errorf("list params error, err=%v", err))
 			continue
 		}
-		for _, param := range listParamsResponse.Params {
-			sceneParams.AddParam(param.ParamName, param.ParamValue)
+
+		for _, param := range paramResponse.Body.Params {
+			sceneParams.AddParam(*param.Name, *param.Value)
 		}
 		sceneParamData[scene.SceneName] = sceneParams
 	}

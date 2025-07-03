@@ -2,6 +2,7 @@ package experiments
 
 import (
 	"fmt"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 	"strconv"
 	"time"
 
@@ -23,7 +24,7 @@ func (e *ExperimentClient) LoadSceneParamsData() {
 	for _, scene := range listScenesResponse.Scenes {
 		sceneParams := model.NewSceneParams()
 		listParamsRequest := &pairecservice20221213.ListParamsRequest{}
-		listParamsRequest.Environment = tea.String(e.Environment)
+		listParamsRequest.Environment = tea.String(common.EnvironmentDesc2OpenApiString[e.Environment])
 		listParamsRequest.SceneId = tea.String(strconv.FormatInt(scene.SceneId, 10))
 		listParamsRequest.Encrypted = tea.Bool(true)
 		listParamsRequest.InstanceId = tea.String(e.InstanceId)

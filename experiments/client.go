@@ -15,6 +15,7 @@ import (
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/api"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
+	"github.com/aliyun/credentials-go/credentials"
 )
 
 //var PAIRecEndpoint = "pairecservice-vpc.%s.aliyuncs.com"
@@ -96,7 +97,21 @@ func NewExperimentClient(instanceId, regionId, accessKeyId, accessKeySecret, env
 	//endpoint := fmt.Sprintf(nAIRecEndpoint, regionId)
 	config.Endpoint = tea.String(client.APIClient.GetDomain())
 
-	clientV2, err := pairecservice20221213.NewClient(config)
+	var (
+		clientV2 *pairecservice20221213.Client
+	)
+	if accessKeyId == "" || accessKeySecret == "" {
+		credential, err1 := credentials.NewCredential(nil)
+		if err1 != nil {
+			return nil, err1
+		}
+
+		config.Credential = credential
+		clientV2, err = pairecservice20221213.NewClient(config)
+	} else {
+		clientV2, err = pairecservice20221213.NewClient(config)
+	}
+
 	if err != nil {
 		return nil, err
 	}

@@ -2,13 +2,13 @@ package experiments
 
 import (
 	"fmt"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 	"strconv"
 	"time"
 
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
+
 	pairecservice20221213 "github.com/alibabacloud-go/pairecservice-20221213/v3/client"
 	"github.com/alibabacloud-go/tea/tea"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 )
 

@@ -1,13 +1,14 @@
 package test
 
 import (
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/experiments"
 	"log"
 	"os"
+
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/experiments"
 )
 
 func CreateExperimentClient(environment string) *experiments.ExperimentClient {
-	region := "cn-xxx"
+	region := "cn-hangzhou"
 
 	accessId := os.Getenv("ACCESS_ID")
 	accessKey := os.Getenv("ACCESS_KEY")

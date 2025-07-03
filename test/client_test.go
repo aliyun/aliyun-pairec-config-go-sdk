@@ -2,10 +2,11 @@ package test
 
 import (
 	"fmt"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
-	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 	"log"
 	"testing"
+
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 )
 
 func TestMatchExperiment(t *testing.T) {
@@ -13,31 +14,33 @@ func TestMatchExperiment(t *testing.T) {
 
 	experimentContext := model.ExperimentContext{
 		RequestId: "pvid",
-		Uid:       "1034416388",
+		Uid:       "1034416498",
 		FilterParams: map[string]interface{}{
 			"country": "new12",
 		},
 	}
 
-	experimentResult := client.MatchExperiment("home_feed", &experimentContext)
+	experimentResult := client.MatchExperiment("HomePage", &experimentContext)
 
 	fmt.Println(experimentResult.Info())
 	fmt.Println(experimentResult.GetExpId())
 
-	fmt.Println(experimentResult.GetExperimentParams().GetString("version", "not exist"))
-	fmt.Println(experimentResult.GetExperimentParams().GetString("rank_version", "not exist"))
+	fmt.Println(experimentResult.GetExperimentParams().GetString("recall_param", "not exist"))
+	fmt.Println(experimentResult.GetExperimentParams().GetString("rank_param", "not exist"))
 
 }
 
 func TestGetSceneParam(t *testing.T) {
-	client := CreateExperimentClient(common.Environment_Daily_Desc)
+	client := CreateExperimentClient(common.Environment_Product_Desc)
 
-	param := client.GetSceneParams("homepage").GetString("version", "not exist")
+	param := client.GetSceneParams("zhenghong_scene").GetString("test", "not exist")
 	fmt.Println(param)
+	params := client.GetSceneParams("pairec_config_scene").ListParams()
+	t.Log(params)
 }
 
 func TestGetFeatureConsistencyJob(t *testing.T) {
-	client := CreateExperimentClient(common.Environment_Prepub_Desc)
+	client := CreateExperimentClient(common.Environment_Product_Desc)
 
 	jobs := client.GetSceneParams("home_feed").GetFeatureConsistencyJobs()
 	for _, job := range jobs {

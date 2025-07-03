@@ -1,6 +1,6 @@
 module github.com/aliyun/aliyun-pairec-config-go-sdk/v2
 
-go 1.19
+go 1.23.0
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
@@ -20,7 +20,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/opentracing/opentracing-go v1.2.1-0.20220228012449-10b1cf09e00b // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
-	golang.org/x/net v0.23.0 // indirect
+	golang.org/x/net v0.38.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 )
 

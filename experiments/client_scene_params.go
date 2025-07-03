@@ -7,6 +7,7 @@ import (
 
 	pairecservice20221213 "github.com/alibabacloud-go/pairecservice-20221213/v3/client"
 	"github.com/alibabacloud-go/tea/tea"
+	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 )
 
@@ -23,7 +24,7 @@ func (e *ExperimentClient) LoadSceneParamsData() {
 	for _, scene := range listScenesResponse.Scenes {
 		sceneParams := model.NewSceneParams()
 		listParamsRequest := &pairecservice20221213.ListParamsRequest{}
-		listParamsRequest.Environment = tea.String(e.Environment)
+		listParamsRequest.Environment = tea.String(common.EnvironmentDesc2OpenApiString[e.Environment])
 		listParamsRequest.SceneId = tea.String(strconv.FormatInt(scene.SceneId, 10))
 		listParamsRequest.Encrypted = tea.Bool(true)
 		listParamsRequest.InstanceId = tea.String(e.InstanceId)
@@ -32,7 +33,7 @@ func (e *ExperimentClient) LoadSceneParamsData() {
 
 		if err != nil {
 			e.logError(fmt.Errorf("list params error, err=%v", err))
-			continue
+			return
 		}
 
 		for _, param := range paramResponse.Body.Params {

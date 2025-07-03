@@ -4,10 +4,11 @@ import (
 	"crypto/md5"
 	"errors"
 	"fmt"
-	"github.com/alibabacloud-go/tea/tea"
 	"hash/fnv"
 	"strconv"
 	"time"
+
+	"github.com/alibabacloud-go/tea/tea"
 
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	pairecservice20221213 "github.com/alibabacloud-go/pairecservice-20221213/v3/client"
@@ -16,7 +17,7 @@ import (
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 )
 
-var PAIRecEndpoint = "pairecservice.%s.aliyuncs.com"
+//var PAIRecEndpoint = "pairecservice-vpc.%s.aliyuncs.com"
 
 type ClientOption func(c *ExperimentClient)
 
@@ -83,23 +84,23 @@ func NewExperimentClient(instanceId, regionId, accessKeyId, accessKeySecret, env
 		return nil, err
 	}
 
+	for _, opt := range opts {
+		opt(&client)
+	}
+
 	config := &openapi.Config{
 		AccessKeyId:     tea.String(accessKeyId),
 		AccessKeySecret: tea.String(accessKeySecret),
 	}
 
-	endpoint := fmt.Sprintf(PAIRecEndpoint, regionId)
-	config.Endpoint = tea.String(endpoint)
+	//endpoint := fmt.Sprintf(nAIRecEndpoint, regionId)
+	config.Endpoint = tea.String(client.APIClient.GetDomain())
 
 	clientV2, err := pairecservice20221213.NewClient(config)
 	if err != nil {
 		return nil, err
 	}
 	client.APIClientV2 = clientV2
-
-	for _, opt := range opts {
-		opt(&client)
-	}
 
 	if err := client.Validate(); err != nil {
 		return nil, err

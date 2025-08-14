@@ -2,6 +2,7 @@ package model
 
 import (
 	"strconv"
+	"sync"
 )
 
 // LayerParams offers Get* function to get value by the key
@@ -20,9 +21,12 @@ type LayerParams interface {
 	GetFloat(key string, defaultValue float64) float64
 
 	GetInt64(key string, defaultValue int64) int64
+
+	ListParams() map[string]interface{}
 }
 
 type layerParams struct {
+	mu         sync.RWMutex
 	Parameters map[string]interface{}
 }
 
@@ -33,16 +37,22 @@ func NewLayerParams() *layerParams {
 }
 
 func (r *layerParams) AddParam(key string, value interface{}) {
+	r.mu.Lock()
 	r.Parameters[key] = value
+	r.mu.Unlock()
 }
 
 func (r *layerParams) AddParams(params map[string]interface{}) {
+	r.mu.Lock()
 	for k, v := range params {
 		r.Parameters[k] = v
 	}
+	r.mu.Unlock()
 }
 
 func (r *layerParams) Get(key string, defaultValue interface{}) interface{} {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	if val, ok := r.Parameters[key]; ok {
 		return val
 	}
@@ -50,6 +60,8 @@ func (r *layerParams) Get(key string, defaultValue interface{}) interface{} {
 }
 
 func (r *layerParams) GetString(key, defaultValue string) string {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	val, ok := r.Parameters[key]
 	if !ok {
 		return defaultValue
@@ -71,6 +83,8 @@ func (r *layerParams) GetString(key, defaultValue string) string {
 }
 
 func (r *layerParams) GetInt(key string, defaultValue int) int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	val, ok := r.Parameters[key]
 	if !ok {
 		return defaultValue
@@ -97,6 +111,8 @@ func (r *layerParams) GetInt(key string, defaultValue int) int {
 	}
 }
 func (r *layerParams) GetFloat(key string, defaultValue float64) float64 {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	val, ok := r.Parameters[key]
 	if !ok {
 		return defaultValue
@@ -118,6 +134,8 @@ func (r *layerParams) GetFloat(key string, defaultValue float64) float64 {
 	}
 }
 func (r *layerParams) GetInt64(key string, defaultValue int64) int64 {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
 	val, ok := r.Parameters[key]
 	if !ok {
 		return defaultValue
@@ -145,11 +163,17 @@ func (r *layerParams) GetInt64(key string, defaultValue int64) int64 {
 	}
 }
 
+func (r *layerParams) ListParams() map[string]interface{} {
+	return r.Parameters
+}
+
 func MergeLayerParams(layersParamsMap map[string]LayerParams) LayerParams {
 	mergedParams := NewLayerParams()
 	for _, unmergedParams := range layersParamsMap {
 		switch v := unmergedParams.(type) {
 		case *layerParams:
+			v.mu.Lock()
+			defer v.mu.Unlock()
 			for k, p := range v.Parameters {
 				mergedParams.Parameters[k] = p
 			}

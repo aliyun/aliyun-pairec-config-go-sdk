@@ -28,3 +28,8 @@ func (r *EmptyLayerParams) GetFloat(key string, defaultValue float64) float64 {
 func (r *EmptyLayerParams) GetInt64(key string, defaultValue int64) int64 {
 	return defaultValue
 }
+
+func (r *EmptyLayerParams) ListParams() map[string]interface{} {
+	emptyParams := make(map[string]interface{})
+	return emptyParams
+}

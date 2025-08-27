@@ -19,15 +19,6 @@ var (
 
 type TrafficControlApiService service
 
-/*
-FlowCtrlApiService 获取流控计划列表
- * @param ctx context.Context - for authentication, logging, cancellation, deadlines, tracing, etc. Passed from http.Request or context.Background().
- * @param optional nil or *FlowCtrlApiListFlowCtrlPlansOpts - Optional Parameters:
-     * @param "SceneId" (optional.Int32) -
-     * @param "Status" (optional.String) -
-@return ListFlowCtrlPlansResponse
-*/
-
 type TrafficControlApiListTrafficControlTasksOpts struct {
 	Name                 optional.String
 	TrafficControlTaskId optional.String

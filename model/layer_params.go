@@ -164,7 +164,14 @@ func (r *layerParams) GetInt64(key string, defaultValue int64) int64 {
 }
 
 func (r *layerParams) ListParams() map[string]interface{} {
-	return r.Parameters
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	p := make(map[string]interface{}, len(r.Parameters))
+
+	for k, v := range r.Parameters {
+		p[k] = v
+	}
+	return p
 }
 
 func MergeLayerParams(layersParamsMap map[string]LayerParams) LayerParams {
@@ -172,11 +179,7 @@ func MergeLayerParams(layersParamsMap map[string]LayerParams) LayerParams {
 	for _, unmergedParams := range layersParamsMap {
 		switch v := unmergedParams.(type) {
 		case *layerParams:
-			v.mu.Lock()
-			defer v.mu.Unlock()
-			for k, p := range v.Parameters {
-				mergedParams.Parameters[k] = p
-			}
+			mergedParams.AddParams(v.ListParams())
 		}
 	}
 	return LayerParams(mergedParams)

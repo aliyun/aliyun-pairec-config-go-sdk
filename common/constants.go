@@ -53,9 +53,10 @@ const (
 	Version_Latest   = "Latest"
 	Version_Released = "Released"
 
-	ControlTargetFilter_All   = "ALL"
-	ControlTargetFilter_Vaild = "Valid"
-	ControlTargetFilter_None  = "None"
+	ControlTargetFilter_All            = "ALL"
+	ControlTargetFilter_Vaild          = "Valid"
+	ControlTargetFilter_None           = "None"
+	TrafficControlTargetStatusOfClosed = "Closed"
 )
 
 var (

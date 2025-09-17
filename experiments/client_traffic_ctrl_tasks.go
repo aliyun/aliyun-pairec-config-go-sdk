@@ -172,34 +172,24 @@ func (e *ExperimentClient) GetTrafficControlActualTraffic(env string, expIdOrIte
 
 	for _, task := range tasks {
 		taskTrafficMap := task.ActualTraffic.TaskTraffics
-
-		for expOrItemId, taskTraffic := range taskTrafficMap {
-
-			key := fmt.Sprintf("%s@%s", task.TrafficControlTaskId, expOrItemId)
-
-			if _, ok := tmpActualTrafficMap[key]; !ok {
-				tmpActualTrafficMap[key] = &TrafficControlTargetTraffic{
-					ItemOrExpId:          expOrItemId,
-					TrafficControlTaskId: task.TrafficControlTaskId,
-					TaskTraffic:          taskTraffic.Traffic,
-				}
-			}
-		}
-
 		for _, target := range task.TrafficControlTargets {
-
 			targetTraffic, ok := getTargetTraffic(target.TrafficControlTargetId, task.ActualTraffic.TargetTraffics)
 			if ok {
 				for expOrItemId, targetTrafficDetail := range targetTraffic.Data {
 
-					key := fmt.Sprintf("%s@%s", task.TrafficControlTaskId, expOrItemId)
+					key := fmt.Sprintf("%s@%s", target.TrafficControlTargetId, expOrItemId)
 					recordTime := time.Unix(targetTrafficDetail.RecordTime, 0)
-					if _, okay := tmpActualTrafficMap[key]; okay {
-						tmpTraffic := tmpActualTrafficMap[key]
-						tmpTraffic.TrafficControlTargetId = targetTraffic.TrafficControlTargetId
-						tmpTraffic.TargetTraffic = targetTrafficDetail.Traffic
-						tmpTraffic.RecordTime = recordTime
+
+					taskTraffic := taskTrafficMap[expOrItemId]
+					tmpTrafficInfo := &TrafficControlTargetTraffic{
+						ItemOrExpId:            expOrItemId,
+						TrafficControlTaskId:   task.TrafficControlTaskId,
+						TrafficControlTargetId: target.TrafficControlTargetId,
+						TargetTraffic:          targetTrafficDetail.Traffic,
+						RecordTime:             recordTime,
+						TaskTraffic:            taskTraffic.Traffic,
 					}
+					tmpActualTrafficMap[key] = tmpTrafficInfo
 				}
 			}
 		}
@@ -216,9 +206,9 @@ func (e *ExperimentClient) GetTrafficControlActualTraffic(env string, expIdOrIte
 	}
 
 	for _, traffic := range traffics {
-		trafficArr, ok := resultTrafficsMap[traffic.TrafficControlTargetId]
+		_, ok := resultTrafficsMap[traffic.TrafficControlTargetId]
 		if ok {
-			trafficArr = append(trafficArr, traffic)
+			resultTrafficsMap[traffic.TrafficControlTargetId] = append(resultTrafficsMap[traffic.TrafficControlTargetId], traffic)
 		} else {
 			resultTrafficsMap[traffic.TrafficControlTargetId] = []*TrafficControlTargetTraffic{traffic}
 		}

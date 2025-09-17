@@ -3,6 +3,9 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	pairecservice20221213 "github.com/alibabacloud-go/pairecservice-20221213/v3/client"
+	"github.com/alibabacloud-go/tea/tea"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/pairecservice"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
@@ -34,7 +37,7 @@ type TrafficControlApiListTrafficControlTasksOpts struct {
 	ALL                  optional.Bool
 }
 
-func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *TrafficControlApiListTrafficControlTasksOpts) (ListTrafficControlTasksResponse, error) {
+func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *TrafficControlApiListTrafficControlTasksOpts, serviceName string) (ListTrafficControlTasksResponse, error) {
 	listTrafficControlRequest := pairecservice.CreateListTrafficControlTasksRequest()
 	listTrafficControlRequest.InstanceId = fca.instanceId
 	listTrafficControlRequest.SetDomain(fca.client.GetDomain())
@@ -88,6 +91,26 @@ func (fca *TrafficControlApiService) ListTrafficControlTasks(localVarOptionals *
 	}
 
 	for _, trafficControlTask := range response.TrafficControlTasks {
+
+		if trafficControlTask.ServiceId != "" && serviceName != "" {
+			getServiceRequest := &pairecservice20221213.GetServiceRequest{
+				InstanceId: tea.String(fca.instanceId),
+			}
+			serviceResponse, err := fca.client.clientV2.GetService(tea.String(trafficControlTask.ServiceId), getServiceRequest)
+			if err != nil {
+				return localVarReturnValue, err
+			}
+			var taskServiceName string
+			if localVarOptionals.Env.Value() == common.Environment_Prepub_Desc {
+				taskServiceName = fmt.Sprintf("%s_%s", *serviceResponse.Body.Name, common.Environment_Prepub_Desc)
+			} else {
+				taskServiceName = *serviceResponse.Body.Name
+			}
+			if taskServiceName != serviceName {
+				continue
+			}
+		}
+
 		var task model.TrafficControlTask
 		// List of storage traffic control tasks
 		task.TrafficControlTaskId = trafficControlTask.TrafficControlTaskId

@@ -6,10 +6,23 @@ import (
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
 	"github.com/antihax/optional"
+	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
+var (
+	serviceName string
+)
+
+func init() {
+	value := os.Getenv("SERVICE_NAME")
+	valueArr := strings.Split(value, "@")
+	if len(valueArr) == 2 {
+		serviceName = valueArr[0]
+	}
+}
 func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 	//Load traffic control data for the production environment
 	prodSceneTrafficControlTasksData := make(map[string][]model.TrafficControlTask, 0)
@@ -20,7 +33,7 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 		Status:              optional.NewString("Running"),
 		Version:             optional.NewString("Released"),
 	}
-	prodResponse, err := e.APIClient.TrafficControlApi.ListTrafficControlTasks(prodOpt)
+	prodResponse, err := e.APIClient.TrafficControlApi.ListTrafficControlTasks(prodOpt, serviceName)
 	if err != nil {
 		e.logError(fmt.Errorf("list flow tasks error, err=%v", err))
 		return
@@ -43,7 +56,7 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 		Status:              optional.NewString("Running"),
 		Version:             optional.NewString("Released"),
 	}
-	prePubResponse, _ := e.APIClient.TrafficControlApi.ListTrafficControlTasks(prePubOpt)
+	prePubResponse, _ := e.APIClient.TrafficControlApi.ListTrafficControlTasks(prePubOpt, serviceName)
 	if err != nil {
 		e.logError(fmt.Errorf("list flow tasks error,error=%v", err))
 		return

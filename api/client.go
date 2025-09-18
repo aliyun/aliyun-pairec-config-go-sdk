@@ -81,7 +81,7 @@ func NewAPIClient(instanceId, region, accessId, accessKey string) (*APIClient, e
 		clientV2 *pairecservice20221213.Client
 	)
 	config := &openapi.Config{}
-	config.Endpoint = tea.String(fmt.Sprintf("pairecservice.%s.aliyuncs.com", region))
+	config.Endpoint = tea.String(fmt.Sprintf("pairecservice-vpc.%s.aliyuncs.com", region))
 
 	if accessId == "" || accessKey == "" {
 		defaultProvider := credentials.NewDefaultCredentialsProvider()

@@ -3,6 +3,9 @@ package api
 import (
 	"context"
 	"fmt"
+	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
+	pairecservice20221213 "github.com/alibabacloud-go/pairecservice-20221213/v3/client"
+	"github.com/alibabacloud-go/tea/tea"
 	"net"
 	"net/http"
 	"time"
@@ -10,6 +13,7 @@ import (
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/auth/credentials"
 	"github.com/aliyun/alibaba-cloud-sdk-go/services/pairecservice"
+	credentialsv2 "github.com/aliyun/credentials-go/credentials"
 )
 
 var (
@@ -59,6 +63,8 @@ type APIClient struct {
 	//TrafficControlApi *TrafficControlApiService
 
 	FeatureConsistencyCheckApi *FeatureConsistencyCheckService
+
+	clientV2 *pairecservice20221213.Client
 }
 
 type service struct {
@@ -70,16 +76,42 @@ type service struct {
 // optionally a custom http.Client to allow for advanced features such as caching.
 func NewAPIClient(instanceId, region, accessId, accessKey string) (*APIClient, error) {
 	var (
-		client *pairecservice.Client
-		err    error
+		client   *pairecservice.Client
+		err      error
+		clientV2 *pairecservice20221213.Client
 	)
+	config := &openapi.Config{}
+	config.Endpoint = tea.String(fmt.Sprintf("pairecservice-vpc.%s.aliyuncs.com", region))
+
 	if accessId == "" || accessKey == "" {
 		defaultProvider := credentials.NewDefaultCredentialsProvider()
 		sdkConfig := sdk.NewConfig()
 		sdkConfig.Scheme = "https"
 		client, err = pairecservice.NewClientWithOptions(region, sdkConfig, defaultProvider)
+		if err != nil {
+			return nil, err
+		}
+		credential, err1 := credentialsv2.NewCredential(nil)
+		if err1 != nil {
+			return nil, err1
+		}
+		config.Credential = credential
+		clientV2, err = pairecservice20221213.NewClient(config)
+		if err != nil {
+			return nil, err
+		}
 	} else {
 		client, err = pairecservice.NewClientWithAccessKey(region, accessId, accessKey)
+		if err != nil {
+			return nil, err
+		}
+
+		config.AccessKeyId = tea.String(accessId)
+		config.AccessKeySecret = tea.String(accessKey)
+		clientV2, err = pairecservice20221213.NewClient(config)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if err != nil {
@@ -88,8 +120,9 @@ func NewAPIClient(instanceId, region, accessId, accessKey string) (*APIClient, e
 	client.SetTransport(defaultTransport)
 
 	c := &APIClient{
-		Client: client,
-		region: region,
+		Client:   client,
+		region:   region,
+		clientV2: clientV2,
 	}
 	c.common.client = c
 	c.common.instanceId = instanceId

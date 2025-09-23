@@ -7,10 +7,26 @@ import (
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/api"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
+	"github.com/antihax/optional"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 )
 
 func (e *ExperimentClient) loadTrafficControlTasks() {
+var (
+	serviceName string
+)
+
+func init() {
+	value := os.Getenv("SERVICE_NAME")
+	valueArr := strings.Split(value, "@")
+	if len(valueArr) == 2 {
+		serviceName = valueArr[0]
+	}
+}
+func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 	//Load traffic control data for the production environment
 	productTrafficControlTasks := make([]*model.TrafficControlTask, 0)
 	prodQueryParams := &ListTrafficControlTasksQueryParams{

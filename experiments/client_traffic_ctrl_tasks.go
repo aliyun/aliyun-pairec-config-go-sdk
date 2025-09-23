@@ -7,14 +7,12 @@ import (
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/api"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
-	"github.com/antihax/optional"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 )
 
-func (e *ExperimentClient) loadTrafficControlTasks() {
 var (
 	serviceName string
 )
@@ -26,13 +24,13 @@ func init() {
 		serviceName = valueArr[0]
 	}
 }
-func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
+func (e *ExperimentClient) loadTrafficControlTasks() {
 	//Load traffic control data for the production environment
 	productTrafficControlTasks := make([]*model.TrafficControlTask, 0)
 	prodQueryParams := &ListTrafficControlTasksQueryParams{
 		ALL:                 true,
 		ControlTargetFilter: "Valid",
-		Env:                 "product",
+		Env:                 "Prod",
 		Status:              "Running",
 		Version:             "Released",
 	}
@@ -50,7 +48,7 @@ func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
 	preQueryParams := &ListTrafficControlTasksQueryParams{
 		ALL:                 true,
 		ControlTargetFilter: "Valid",
-		Env:                 "prepub",
+		Env:                 "Pre",
 		Status:              "Running",
 		Version:             "Released",
 	}
@@ -261,15 +259,7 @@ type ListTrafficControlTasksQueryParams struct {
 func (e *ExperimentClient) listTrafficControlTasks(params *ListTrafficControlTasksQueryParams) (api.ListTrafficControlTasksResponse, error) {
 	listTrafficControlTasksRequest := &pairecv2.ListTrafficControlTasksRequest{}
 	listTrafficControlTasksRequest.InstanceId = tea.String(e.InstanceId)
-
-	if params.Env == common.Environment_Daily_Desc {
-		listTrafficControlTasksRequest.Environment = tea.String("Daily")
-	} else if params.Env == common.Environment_Prepub_Desc {
-		listTrafficControlTasksRequest.Environment = tea.String("Pre")
-	} else if params.Env == common.Environment_Product_Desc {
-		listTrafficControlTasksRequest.Environment = tea.String("Prod")
-	}
-
+	listTrafficControlTasksRequest.Environment = tea.String(params.Env)
 	listTrafficControlTasksRequest.Status = tea.String(params.Status)
 	listTrafficControlTasksRequest.Version = tea.String(params.Version)
 	listTrafficControlTasksRequest.ControlTargetFilter = tea.String(params.ControlTargetFilter)
@@ -284,9 +274,35 @@ func (e *ExperimentClient) listTrafficControlTasks(params *ListTrafficControlTas
 
 	for _, trafficControlTask := range response.Body.TrafficControlTasks {
 
+		// filter by service name
+		if trafficControlTask.ServiceIdList != nil && serviceName != "" {
+
+			var has bool
+
+			for _, serviceId := range trafficControlTask.ServiceIdList {
+				getServiceRequest := &pairecv2.GetServiceRequest{}
+				getServiceRequest.InstanceId = tea.String(e.InstanceId)
+				serviceResponse, err := e.APIClientV2.GetService(tea.String(strconv.Itoa(int(*serviceId))), getServiceRequest)
+				if err != nil {
+					return localVarReturnValue, err
+				}
+				var taskServiceName string
+				if params.Env == common.OpenAPIEnvironmentPrepub {
+					taskServiceName = fmt.Sprintf("%s_%s", *serviceResponse.Body.Name, common.Environment_Prepub_Desc)
+				} else {
+					taskServiceName = *serviceResponse.Body.Name
+				}
+				if taskServiceName == serviceName {
+					has = true
+					break
+				}
+			}
+			if !has {
+				continue
+			}
+		}
 		task := model.TrafficControlTaskConvert(trafficControlTask)
 
-		// List of storage traffic control targets
 		for _, trafficControlTarget := range trafficControlTask.TrafficControlTargets {
 
 			target := model.TrafficControlTargetConvert(trafficControlTarget)

@@ -8,9 +8,12 @@ const (
 	Environment_Prepub  = 2
 	Environment_Product = 4
 
-	Environment_Daily_Desc   = "daily"
-	Environment_Prepub_Desc  = "prepub"
-	Environment_Product_Desc = "product"
+	Environment_Daily_Desc    = "daily"
+	Environment_Prepub_Desc   = "prepub"
+	Environment_Product_Desc  = "product"
+	OpenAPIEnvironmentDaily   = "Daily"
+	OpenAPIEnvironmentPrepub  = "Pre"
+	OpenAPIEnvironmentProduct = "Prod"
 
 	Bucket_Type_UID      = uint32(1)
 	Bucket_Type_UID_HASH = uint32(2)

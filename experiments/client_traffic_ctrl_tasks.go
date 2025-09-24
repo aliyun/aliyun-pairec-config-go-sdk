@@ -275,9 +275,28 @@ func (e *ExperimentClient) listTrafficControlTasks(params *ListTrafficControlTas
 	for _, trafficControlTask := range response.Body.TrafficControlTasks {
 
 		// filter by service name
-		if trafficControlTask.ServiceIdList != nil && serviceName != "" {
+		if serviceName != "" {
+			var find bool
 
-			var has bool
+			// 兼容旧数据
+			if trafficControlTask.ServiceId != nil && *trafficControlTask.ServiceId != "" {
+				getServiceRequest := &pairecv2.GetServiceRequest{
+					InstanceId: tea.String(e.InstanceId),
+				}
+				serviceResponse, err := e.APIClientV2.GetService(trafficControlTask.ServiceId, getServiceRequest)
+				if err != nil {
+					return localVarReturnValue, err
+				}
+				var taskServiceName string
+				if params.Env == common.OpenAPIEnvironmentPrepub {
+					taskServiceName = fmt.Sprintf("%s_%s", *serviceResponse.Body.Name, common.Environment_Prepub_Desc)
+				} else {
+					taskServiceName = *serviceResponse.Body.Name
+				}
+				if taskServiceName == serviceName {
+					find = true
+				}
+			}
 
 			for _, serviceId := range trafficControlTask.ServiceIdList {
 				getServiceRequest := &pairecv2.GetServiceRequest{}
@@ -293,11 +312,11 @@ func (e *ExperimentClient) listTrafficControlTasks(params *ListTrafficControlTas
 					taskServiceName = *serviceResponse.Body.Name
 				}
 				if taskServiceName == serviceName {
-					has = true
+					find = true
 					break
 				}
 			}
-			if !has {
+			if !find {
 				continue
 			}
 		}

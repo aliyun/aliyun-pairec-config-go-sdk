@@ -130,18 +130,20 @@ func (r *ExperimentResult) Init() {
 			layerParams := NewLayerParams()
 			params := make(map[string]interface{}, 0)
 			if experimentGroup.ExpGroupConfig != "" {
+				experimentGroupConfig := experimentGroup.ExpGroupConfig
+
 				if r.SceneName == GlobalSceneName {
 					var globalParams map[string]json.RawMessage
-					if err := json.Unmarshal([]byte(experimentGroup.ExpGroupConfig), &globalParams); err == nil {
+					if err := json.Unmarshal([]byte(experimentGroupConfig), &globalParams); err == nil {
 						for k, v := range globalParams {
 							r.globalParams[k] = []byte(v)
 						}
 					}
 				} else if experimentGroup.paramsTemplate != nil {
-					experimentGroup.ExpGroupConfig = experimentGroup.paramsTemplate.ExecuteString(r.GlobalSceneExperimentResult.globalParams)
+					experimentGroupConfig = experimentGroup.paramsTemplate.ExecuteString(r.GlobalSceneExperimentResult.globalParams)
 				}
 
-				if err := json.Unmarshal([]byte(experimentGroup.ExpGroupConfig), &params); err == nil {
+				if err := json.Unmarshal([]byte(experimentGroupConfig), &params); err == nil {
 					layerParams.AddParams(params)
 				}
 			}
@@ -152,20 +154,22 @@ func (r *ExperimentResult) Init() {
 					buf.WriteString(strconv.Itoa(int(experiment.ExperimentId)))
 				}
 
+				experimentConfig := experiment.ExperimentConfig
+
 				if r.SceneName == GlobalSceneName {
 					var globalParams map[string]json.RawMessage
-					if err := json.Unmarshal([]byte(experiment.ExperimentConfig), &globalParams); err == nil {
+					if err := json.Unmarshal([]byte(experimentConfig), &globalParams); err == nil {
 						for k, v := range globalParams {
 							r.globalParams[k] = []byte(v)
 						}
 					}
 				} else if experiment.paramsTemplate != nil {
-					experiment.ExperimentConfig = experiment.paramsTemplate.ExecuteString(r.GlobalSceneExperimentResult.globalParams)
+					experimentConfig = experiment.paramsTemplate.ExecuteString(r.GlobalSceneExperimentResult.globalParams)
 				}
 
 				//buf.WriteString("#")
-				if experiment.ExperimentConfig != "" {
-					if err := json.Unmarshal([]byte(experiment.ExperimentConfig), &params); err == nil {
+				if experimentConfig != "" {
+					if err := json.Unmarshal([]byte(experimentConfig), &params); err == nil {
 						layerParams.AddParams(params)
 					}
 				}

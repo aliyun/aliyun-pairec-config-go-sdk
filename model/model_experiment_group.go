@@ -91,7 +91,7 @@ func (e *ExperimentGroup) Init() error {
 		}
 	}
 
-	if e.ExpGroupConfig != "" {
+	if strings.Contains(e.ExpGroupConfig, "#{") {
 		e.paramsTemplate = fasttemplate.New(e.ExpGroupConfig, "#{", "}")
 	}
 

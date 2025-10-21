@@ -157,6 +157,11 @@ func (e *ExperimentClient) MatchExperiment(sceneName string, experimentContext *
 	}
 
 	experimentResult := model.NewExperimentResult(sceneName, experimentContext)
+
+	if sceneName != model.GlobalSceneName {
+		experimentResult.GlobalSceneExperimentResult = e.MatchExperiment(model.GlobalSceneName, experimentContext)
+	}
+
 	var defaultExperimentRoom *model.ExperimentRoom
 	var matchExperimentRoom *model.ExperimentRoom
 	// first find base experiment room

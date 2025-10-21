@@ -4,6 +4,8 @@ import (
 	"strings"
 
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
+
+	"github.com/valyala/fasttemplate"
 )
 
 type ExperimentGroup struct {
@@ -32,6 +34,8 @@ type ExperimentGroup struct {
 	diversionBucket DiversionBucket
 	CrowdUsers      []string
 	crowdUserMap    map[string]struct{}
+
+	paramsTemplate *fasttemplate.Template
 }
 
 func (e *ExperimentGroup) Init() error {
@@ -85,6 +89,10 @@ func (e *ExperimentGroup) Init() error {
 		for _, uid := range e.DebugCrowdUsers {
 			e.debugUserMap[uid] = true
 		}
+	}
+
+	if e.ExpGroupConfig != "" {
+		e.paramsTemplate = fasttemplate.New(e.ExpGroupConfig, "#{", "}")
 	}
 
 	return nil

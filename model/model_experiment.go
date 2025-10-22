@@ -49,8 +49,8 @@ func (e *Experiment) Init() error {
 		e.diversionBucket = NewUidDiversionBucket(100, e.ExperimentBuckets)
 	}
 
-	if strings.Contains(e.ExperimentConfig, "#{") {
-		e.paramsTemplate = fasttemplate.New(e.ExperimentConfig, "#{", "}")
+	if strings.Contains(e.ExperimentConfig, "${") {
+		e.paramsTemplate = fasttemplate.New(e.ExperimentConfig, "${", "}")
 	}
 
 	return nil

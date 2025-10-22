@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
+
+	"github.com/valyala/fasttemplate"
 )
 
 const GlobalSceneName = "pairec_abtest_global_scene"
@@ -58,7 +61,7 @@ type ExperimentResult struct {
 
 	GlobalSceneExperimentResult *ExperimentResult
 
-	globalParams map[string]any
+	globalParams map[string][]byte
 }
 
 func NewExperimentResult(sceneName string, experimentContext *ExperimentContext) *ExperimentResult {
@@ -68,7 +71,7 @@ func NewExperimentResult(sceneName string, experimentContext *ExperimentContext)
 		layer2ExperimentGroup: make(map[string]*ExperimentGroup, 0),
 		layer2Experiment:      make(map[string]*Experiment, 0),
 		layerParamsMap:        make(map[string]LayerParams, 0),
-		globalParams:          make(map[string]any),
+		globalParams:          make(map[string][]byte),
 	}
 
 	return &result
@@ -136,11 +139,11 @@ func (r *ExperimentResult) Init() {
 					var globalParams map[string]json.RawMessage
 					if err := json.Unmarshal([]byte(experimentGroupConfig), &globalParams); err == nil {
 						for k, v := range globalParams {
-							r.globalParams[k] = []byte(v)
+							r.globalParams[k] = v
 						}
 					}
 				} else if experimentGroup.paramsTemplate != nil {
-					experimentGroupConfig = experimentGroup.paramsTemplate.ExecuteString(r.GlobalSceneExperimentResult.globalParams)
+					experimentGroupConfig = executeTemplate(experimentGroup.paramsTemplate, r.GlobalSceneExperimentResult.globalParams)
 				}
 
 				if err := json.Unmarshal([]byte(experimentGroupConfig), &params); err == nil {
@@ -160,11 +163,11 @@ func (r *ExperimentResult) Init() {
 					var globalParams map[string]json.RawMessage
 					if err := json.Unmarshal([]byte(experimentConfig), &globalParams); err == nil {
 						for k, v := range globalParams {
-							r.globalParams[k] = []byte(v)
+							r.globalParams[k] = v
 						}
 					}
 				} else if experiment.paramsTemplate != nil {
-					experimentConfig = experiment.paramsTemplate.ExecuteString(r.GlobalSceneExperimentResult.globalParams)
+					experimentConfig = executeTemplate(experiment.paramsTemplate, r.GlobalSceneExperimentResult.globalParams)
 				}
 
 				//buf.WriteString("#")
@@ -281,4 +284,14 @@ func (r *ExperimentResult) GetExperimentParams() LayerParams {
 		r.mergedLayerParams = MergeLayerParams(r.layerParamsMap)
 	}
 	return r.mergedLayerParams
+}
+
+func executeTemplate(t *fasttemplate.Template, params map[string][]byte) string {
+	return t.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+		if v, ok := params[tag]; ok {
+			return w.Write(v)
+		} else {
+			return w.Write([]byte(tag))
+		}
+	})
 }

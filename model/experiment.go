@@ -111,16 +111,18 @@ func (r *ExperimentResult) Init() {
 	buf := bytes.NewBuffer(nil)
 
 	if r.ExperimentRoom != nil {
-		if r.SceneName == GlobalSceneName {
-			buf.WriteString("G")
-		} else {
+		if r.SceneName != GlobalSceneName {
 			buf.WriteString("ER")
 			buf.WriteString(strconv.Itoa(int(r.ExperimentRoom.ExpRoomId)))
 		}
 	}
 	for i, layer := range r.Layers {
-		if i == 0 && r.SceneName == GlobalSceneName {
-			buf.WriteString("L")
+		if r.SceneName == GlobalSceneName {
+			if i == 0 {
+				buf.WriteString("GL")
+			} else {
+				buf.WriteString("_GL")
+			}
 		} else {
 			buf.WriteString("_L")
 		}

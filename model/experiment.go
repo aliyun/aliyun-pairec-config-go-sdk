@@ -104,10 +104,6 @@ func (r *ExperimentResult) AddMatchExperiment(layerName string, experiment *Expe
 }
 
 func (r *ExperimentResult) Init() {
-	if r.SceneName != GlobalSceneName {
-		r.GlobalSceneExperimentResult.Init()
-	}
-
 	buf := bytes.NewBuffer(nil)
 
 	if r.ExperimentRoom != nil {

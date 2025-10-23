@@ -142,6 +142,7 @@ func (r *ExperimentResult) Init() {
 					if err := json.Unmarshal([]byte(experimentGroupConfig), &globalParams); err == nil {
 						for k, v := range globalParams {
 							r.globalParams[k] = v
+							r.ExperimentContext.FilterParams[k] = v
 						}
 					}
 				} else if experimentGroup.paramsTemplate != nil {
@@ -166,6 +167,7 @@ func (r *ExperimentResult) Init() {
 					if err := json.Unmarshal([]byte(experimentConfig), &globalParams); err == nil {
 						for k, v := range globalParams {
 							r.globalParams[k] = v
+							r.ExperimentContext.FilterParams[k] = v
 						}
 					}
 				} else if experiment.paramsTemplate != nil {

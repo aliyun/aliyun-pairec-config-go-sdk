@@ -141,7 +141,7 @@ func (r *ExperimentResult) Init() {
 							r.ExperimentContext.FilterParams[k] = v
 						}
 					}
-				} else if experimentGroup.paramsTemplate != nil {
+				} else if experimentGroup.paramsTemplate != nil && len(r.GlobalSceneExperimentResult.globalParams) > 0 {
 					experimentGroupConfig = executeTemplate(experimentGroup.paramsTemplate, r.GlobalSceneExperimentResult.globalParams)
 				}
 
@@ -166,7 +166,7 @@ func (r *ExperimentResult) Init() {
 							r.ExperimentContext.FilterParams[k] = v
 						}
 					}
-				} else if experiment.paramsTemplate != nil {
+				} else if experiment.paramsTemplate != nil && len(r.GlobalSceneExperimentResult.globalParams) > 0 {
 					experimentConfig = executeTemplate(experiment.paramsTemplate, r.GlobalSceneExperimentResult.globalParams)
 				}
 

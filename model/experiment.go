@@ -4,11 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
+
+	"github.com/valyala/fasttemplate"
 )
+
+const GlobalSceneName = "pairec_abtest_global_scene"
 
 type ExperimentContext struct {
 	RequestId string
@@ -53,6 +58,10 @@ type ExperimentResult struct {
 	layerParamsMap map[string]LayerParams
 
 	mergedLayerParams LayerParams
+
+	GlobalSceneExperimentResult *ExperimentResult
+
+	globalParams map[string]any
 }
 
 func NewExperimentResult(sceneName string, experimentContext *ExperimentContext) *ExperimentResult {
@@ -62,6 +71,7 @@ func NewExperimentResult(sceneName string, experimentContext *ExperimentContext)
 		layer2ExperimentGroup: make(map[string]*ExperimentGroup, 0),
 		layer2Experiment:      make(map[string]*Experiment, 0),
 		layerParamsMap:        make(map[string]LayerParams, 0),
+		globalParams:          make(map[string]any),
 	}
 
 	return &result
@@ -97,11 +107,22 @@ func (r *ExperimentResult) Init() {
 	buf := bytes.NewBuffer(nil)
 
 	if r.ExperimentRoom != nil {
-		buf.WriteString("ER")
-		buf.WriteString(strconv.Itoa(int(r.ExperimentRoom.ExpRoomId)))
+		if r.SceneName != GlobalSceneName {
+			buf.WriteString("ER")
+			buf.WriteString(strconv.Itoa(int(r.ExperimentRoom.ExpRoomId)))
+		}
 	}
-	for _, layer := range r.Layers {
-		buf.WriteString("_L")
+	for i, layer := range r.Layers {
+		if r.SceneName == GlobalSceneName {
+			if i == 0 {
+				buf.WriteString("GL")
+			} else {
+				buf.WriteString("_GL")
+			}
+		} else {
+			buf.WriteString("_L")
+		}
+
 		buf.WriteString(strconv.Itoa(int(layer.LayerId)))
 		if experimentGroup, found := r.layer2ExperimentGroup[layer.LayerName]; found {
 			buf.WriteString("#")
@@ -110,7 +131,21 @@ func (r *ExperimentResult) Init() {
 			layerParams := NewLayerParams()
 			params := make(map[string]interface{}, 0)
 			if experimentGroup.ExpGroupConfig != "" {
-				if err := json.Unmarshal([]byte(experimentGroup.ExpGroupConfig), &params); err == nil {
+				experimentGroupConfig := experimentGroup.ExpGroupConfig
+
+				if r.SceneName == GlobalSceneName {
+					var globalParams map[string]any
+					if err := json.Unmarshal([]byte(experimentGroupConfig), &globalParams); err == nil {
+						for k, v := range globalParams {
+							r.globalParams[k] = v
+							r.ExperimentContext.FilterParams[k] = v
+						}
+					}
+				} else if experimentGroup.paramsTemplate != nil && len(r.GlobalSceneExperimentResult.globalParams) > 0 {
+					experimentGroupConfig = executeTemplate(experimentGroup.paramsTemplate, r.GlobalSceneExperimentResult.globalParams)
+				}
+
+				if err := json.Unmarshal([]byte(experimentGroupConfig), &params); err == nil {
 					layerParams.AddParams(params)
 				}
 			}
@@ -120,9 +155,24 @@ func (r *ExperimentResult) Init() {
 					buf.WriteString("E")
 					buf.WriteString(strconv.Itoa(int(experiment.ExperimentId)))
 				}
+
+				experimentConfig := experiment.ExperimentConfig
+
+				if r.SceneName == GlobalSceneName {
+					var globalParams map[string]any
+					if err := json.Unmarshal([]byte(experimentConfig), &globalParams); err == nil {
+						for k, v := range globalParams {
+							r.globalParams[k] = v
+							r.ExperimentContext.FilterParams[k] = v
+						}
+					}
+				} else if experiment.paramsTemplate != nil && len(r.GlobalSceneExperimentResult.globalParams) > 0 {
+					experimentConfig = executeTemplate(experiment.paramsTemplate, r.GlobalSceneExperimentResult.globalParams)
+				}
+
 				//buf.WriteString("#")
-				if experiment.ExperimentConfig != "" {
-					if err := json.Unmarshal([]byte(experiment.ExperimentConfig), &params); err == nil {
+				if experimentConfig != "" {
+					if err := json.Unmarshal([]byte(experimentConfig), &params); err == nil {
 						layerParams.AddParams(params)
 					}
 				}
@@ -138,24 +188,53 @@ func (r *ExperimentResult) Init() {
 		}
 	}
 
+	if r.SceneName != GlobalSceneName {
+		id = id + "_" + r.GlobalSceneExperimentResult.ExpId
+		if len(id) > 0 {
+			if id[len(id)-1] == '#' || id[len(id)-1] == '_' {
+				id = id[0 : len(id)-1]
+			}
+		}
+	}
+
 	r.ExpId = id
 }
 
 func (r *ExperimentResult) GetLayerParams(layerName string) LayerParams {
 	if r.ExperimentRoom == nil || r.LayerSize() == 0 {
+		if r.SceneName != GlobalSceneName {
+			return r.GlobalSceneExperimentResult.GetLayerParams(layerName)
+		}
 		return NewEmptyLayerParams()
 	}
 
 	// omit layer name
 	if r.LayerSize() == 1 {
 		if layerParams, found := r.layerParamsMap[r.Layers[0].LayerName]; found {
+			if r.SceneName != GlobalSceneName {
+				return MergeLayerParams(map[string]LayerParams{
+					"self_layer":   layerParams,
+					"global_layer": r.GlobalSceneExperimentResult.GetLayerParams(layerName),
+				})
+			}
+
 			return layerParams
 		}
 	}
 
 	layerParams, found := r.layerParamsMap[layerName]
 	if !found {
+		if r.SceneName != GlobalSceneName {
+			return r.GlobalSceneExperimentResult.GetLayerParams(layerName)
+		}
 		return NewEmptyLayerParams()
+	}
+
+	if r.SceneName != GlobalSceneName {
+		return MergeLayerParams(map[string]LayerParams{
+			"self_layer":   layerParams,
+			"global_layer": r.GlobalSceneExperimentResult.GetLayerParams(layerName),
+		})
 	}
 
 	return layerParams
@@ -177,8 +256,50 @@ func (r *ExperimentResult) Info() string {
 }
 
 func (r *ExperimentResult) GetExperimentParams() LayerParams {
+	if r.SceneName != GlobalSceneName {
+		if r.mergedLayerParams == nil {
+			mergedParams := NewLayerParams()
+			for _, unmergedParams := range r.GlobalSceneExperimentResult.layerParamsMap {
+				switch v := unmergedParams.(type) {
+				case *layerParams:
+					for k, p := range v.Parameters {
+						mergedParams.Parameters[k] = p
+					}
+				}
+			}
+			for _, unmergedParams := range r.layerParamsMap {
+				switch v := unmergedParams.(type) {
+				case *layerParams:
+					for k, p := range v.Parameters {
+						mergedParams.Parameters[k] = p
+					}
+				}
+			}
+
+			r.mergedLayerParams = mergedParams
+		}
+		return r.mergedLayerParams
+	}
 	if r.mergedLayerParams == nil {
 		r.mergedLayerParams = MergeLayerParams(r.layerParamsMap)
 	}
 	return r.mergedLayerParams
+}
+
+func executeTemplate(t *fasttemplate.Template, params map[string]any) string {
+	return t.ExecuteFuncString(func(w io.Writer, tag string) (int, error) {
+		if param, ok := params[tag]; ok {
+			switch v := param.(type) {
+			case map[string]any, []any: // not support for object and array
+				break
+			case []byte:
+				return w.Write(v)
+			case string:
+				return w.Write([]byte(v))
+			default:
+				return w.Write([]byte(fmt.Sprintf("%v", v)))
+			}
+		}
+		return w.Write([]byte("${" + tag + "}"))
+	})
 }

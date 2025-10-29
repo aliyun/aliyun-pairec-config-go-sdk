@@ -152,11 +152,18 @@ func (e *ExperimentClient) MatchExperiment(sceneName string, experimentContext *
 	scene, exist := sceneData[sceneName]
 
 	if !exist {
-		e.logError(fmt.Errorf("scene:%s, not found the scene info", sceneName))
+		if sceneName != model.GlobalSceneName {
+			e.logError(fmt.Errorf("scene:%s, not found the scene info", sceneName))
+		}
 		return model.NewExperimentResult(sceneName, experimentContext)
 	}
 
 	experimentResult := model.NewExperimentResult(sceneName, experimentContext)
+
+	if sceneName != model.GlobalSceneName {
+		experimentResult.GlobalSceneExperimentResult = e.MatchExperiment(model.GlobalSceneName, experimentContext)
+	}
+
 	var defaultExperimentRoom *model.ExperimentRoom
 	var matchExperimentRoom *model.ExperimentRoom
 	// first find base experiment room

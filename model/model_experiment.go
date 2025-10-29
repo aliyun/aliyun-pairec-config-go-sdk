@@ -2,6 +2,8 @@ package model
 
 import (
 	"strings"
+
+	"github.com/valyala/fasttemplate"
 )
 
 type Experiment struct {
@@ -23,6 +25,8 @@ type Experiment struct {
 	DebugCrowdUsers []string        `json:"debug_crowd_users"`
 	debugUserMap    map[string]bool `json:"-"`
 	diversionBucket DiversionBucket `json:"-"`
+
+	paramsTemplate *fasttemplate.Template
 }
 
 // Init is a function of init experiment data
@@ -43,6 +47,10 @@ func (e *Experiment) Init() error {
 
 	if e.ExperimentFlow > 0 && e.ExperimentFlow < 100 {
 		e.diversionBucket = NewUidDiversionBucket(100, e.ExperimentBuckets)
+	}
+
+	if strings.Contains(e.ExperimentConfig, "${") {
+		e.paramsTemplate = fasttemplate.New(e.ExperimentConfig, "${", "}")
 	}
 
 	return nil

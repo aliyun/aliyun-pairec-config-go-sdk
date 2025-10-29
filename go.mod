@@ -1,6 +1,6 @@
 module github.com/aliyun/aliyun-pairec-config-go-sdk/v2
 
-go 1.19
+go 1.24
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible

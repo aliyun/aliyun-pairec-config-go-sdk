@@ -259,11 +259,13 @@ func (r *ExperimentResult) GetExperimentParams() LayerParams {
 	if r.SceneName != GlobalSceneName {
 		if r.mergedLayerParams == nil {
 			mergedParams := NewLayerParams()
-			for _, unmergedParams := range r.GlobalSceneExperimentResult.layerParamsMap {
-				switch v := unmergedParams.(type) {
-				case *layerParams:
-					for k, p := range v.Parameters {
-						mergedParams.Parameters[k] = p
+			if r.GlobalSceneExperimentResult != nil { // if SceneName not found,  GlobalSceneExperimentResult will be nil
+				for _, unmergedParams := range r.GlobalSceneExperimentResult.layerParamsMap {
+					switch v := unmergedParams.(type) {
+					case *layerParams:
+						for k, p := range v.Parameters {
+							mergedParams.Parameters[k] = p
+						}
 					}
 				}
 			}

@@ -10,17 +10,15 @@ import (
 func TestListTrafficControlTasks(t *testing.T) {
 	client := CreateExperimentClient(common.Environment_Prepub_Desc)
 	// 预发运行中的调控任务
-
-	//preTasks := client.ListTrafficControlTasks(common.Environment_Prepub_Desc, 0)
+	//preTasks := client.ListTrafficControlTasks(common.Environment_Prepub_Desc)
 	//
 	//for _, task := range preTasks {
 	//	d, _ := json.Marshal(task)
 	//	fmt.Println(fmt.Sprintf("%s: %s\n", task.TrafficControlTaskId, string(d)))
 	//}
 	// 生产运行中的调控任务
-	proTasks := client.ListTrafficControlTasks(common.Environment_Product_Desc)
-
-	for _, task := range proTasks {
+	tasks := client.ListTrafficControlTasks(common.Environment_Product_Desc)
+	for _, task := range tasks {
 		d, _ := json.Marshal(task)
 		fmt.Println(fmt.Sprintf("%s: %s\n", task.TrafficControlTaskId, string(d)))
 	}

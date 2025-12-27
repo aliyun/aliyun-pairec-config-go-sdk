@@ -1,6 +1,7 @@
 package experiments
 
 import (
+	"errors"
 	"fmt"
 	pairecv2 "github.com/alibabacloud-go/pairecservice-20221213/v3/client"
 	"github.com/alibabacloud-go/tea/tea"
@@ -24,7 +25,7 @@ func init() {
 		serviceName = valueArr[0]
 	}
 }
-func (e *ExperimentClient) loadTrafficControlTasks() {
+func (e *ExperimentClient) LoadTrafficControlTasks() {
 	//Load traffic control data for the production environment
 	productTrafficControlTasks := make([]*model.TrafficControlTask, 0)
 	prodQueryParams := &ListTrafficControlTasksQueryParams{
@@ -67,78 +68,152 @@ func (e *ExperimentClient) loadTrafficControlTasks() {
 
 }
 
-func (e *ExperimentClient) loopLoadTrafficControlTasks() {
+func (e *ExperimentClient) LoopLoadTrafficControlTasks() {
 
 	for {
 		time.Sleep(time.Second * 30)
-		e.loadTrafficControlTasks()
+		e.LoadTrafficControlTasks()
 	}
 }
 
-func (e *ExperimentClient) ListTrafficControlTasks(env string) []*model.TrafficControlTask {
-	currentTimestamp := time.Now().Unix()
+// 调用 openAPI 获取 task 以及每个 task 的 traffic
+func (e *ExperimentClient) listTrafficControlTasks(params *ListTrafficControlTasksQueryParams) (api.ListTrafficControlTasksResponse, error) {
+	listTrafficControlTasksRequest := &pairecv2.ListTrafficControlTasksRequest{}
+	listTrafficControlTasksRequest.InstanceId = tea.String(e.InstanceId)
+	listTrafficControlTasksRequest.Environment = tea.String(params.Env)
+	listTrafficControlTasksRequest.Status = tea.String(params.Status)
+	listTrafficControlTasksRequest.Version = tea.String(params.Version)
+	listTrafficControlTasksRequest.ControlTargetFilter = tea.String(params.ControlTargetFilter)
+	listTrafficControlTasksRequest.All = tea.Bool(params.ALL)
 
-	validTrafficControlTasks := make([]*model.TrafficControlTask, 0)
+	localVarReturnValue := api.ListTrafficControlTasksResponse{}
+	response, err := e.APIClientV2.ListTrafficControlTasks(listTrafficControlTasksRequest)
 
-	var allTrafficControlTasks = make([]*model.TrafficControlTask, 0)
-
-	if env == common.Environment_Prepub_Desc {
-		allTrafficControlTasks = e.prepubTrafficControlTasks
-	} else if env == common.Environment_Product_Desc {
-		allTrafficControlTasks = e.productTrafficControlTasks
-	} else {
-		return validTrafficControlTasks
+	if err != nil {
+		return localVarReturnValue, err
 	}
 
+	for _, trafficControlTask := range response.Body.TrafficControlTasks {
+		task := model.TrafficControlTaskConvert(trafficControlTask)
+		ok := e.isValidTrafficControlTask(params.Env, task)
+		if !ok {
+			continue
+		}
+		// filter by service name
+		if serviceName != "" {
+			var find bool
+
+			// 兼容旧数据
+			if trafficControlTask.ServiceId != nil && *trafficControlTask.ServiceId != "" {
+				getServiceRequest := &pairecv2.GetServiceRequest{
+					InstanceId: tea.String(e.InstanceId),
+				}
+				serviceResponse, err := e.APIClientV2.GetService(trafficControlTask.ServiceId, getServiceRequest)
+				if err != nil {
+					return localVarReturnValue, err
+				}
+				var taskServiceName string
+				if params.Env == common.OpenAPIEnvironmentPrepub {
+					taskServiceName = fmt.Sprintf("%s_%s", *serviceResponse.Body.Name, common.Environment_Prepub_Desc)
+				} else {
+					taskServiceName = *serviceResponse.Body.Name
+				}
+				if taskServiceName == serviceName {
+					find = true
+				}
+			}
+
+			for _, serviceId := range trafficControlTask.ServiceIdList {
+				getServiceRequest := &pairecv2.GetServiceRequest{}
+				getServiceRequest.InstanceId = tea.String(e.InstanceId)
+				serviceResponse, err := e.APIClientV2.GetService(tea.String(strconv.Itoa(int(*serviceId))), getServiceRequest)
+				if err != nil {
+					return localVarReturnValue, err
+				}
+				var taskServiceName string
+				if params.Env == common.OpenAPIEnvironmentPrepub {
+					taskServiceName = fmt.Sprintf("%s_%s", *serviceResponse.Body.Name, common.Environment_Prepub_Desc)
+				} else {
+					taskServiceName = *serviceResponse.Body.Name
+				}
+				if taskServiceName == serviceName {
+					find = true
+					break
+				}
+			}
+			if !find {
+				continue
+			}
+		}
+
+		for _, trafficControlTarget := range trafficControlTask.TrafficControlTargets {
+			target := model.TrafficControlTargetConvert(trafficControlTarget)
+			isValid := e.isValidTrafficControlTarget(target)
+			if !isValid {
+				continue
+			}
+			task.TrafficControlTargets = append(task.TrafficControlTargets, target)
+		}
+		// 获取每个 task 的实际流量
+		getTrafficRequest := &pairecv2.GetTrafficControlTaskTrafficRequest{}
+		getTrafficRequest.InstanceId = tea.String(e.InstanceId)
+		getTrafficRequest.Environment = listTrafficControlTasksRequest.Environment
+		trafficResponse, err := e.APIClientV2.GetTrafficControlTaskTraffic(tea.String(task.TrafficControlTaskId), getTrafficRequest)
+		if err != nil {
+			return localVarReturnValue, err
+		}
+		actualTraffic := model.ActualTrafficConvert(trafficResponse.Body.TrafficControlTaskTrafficInfo)
+
+		task.ActualTraffic = actualTraffic
+		localVarReturnValue.TrafficControlTasks = append(localVarReturnValue.TrafficControlTasks, task)
+	}
+
+	return localVarReturnValue, nil
+}
+
+func (e *ExperimentClient) isValidTrafficControlTask(env string, task *model.TrafficControlTask) bool {
+	currentTimestamp := time.Now().Unix()
+
 	// filter valid traffic control task
-	for _, task := range allTrafficControlTasks {
-		if task.ExecutionTime != "Permanent" {
+	if task.ExecutionTime != "" {
+		// 任务为某个时间段有效
+		if task.ExecutionTime != common.TrafficControlTaskExecutionTimeOfPermanent {
 			startTime, _ := time.Parse(time.RFC3339, task.StartTime)
 			endTime, _ := time.Parse(time.RFC3339, task.EndTime)
 
-			if env == common.Environment_Product_Desc {
+			if env == common.OpenAPIEnvironmentProduct {
 				if task.ProductStatus == common.TrafficCtrlTask_Running_Status && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
-					validTrafficControlTasks = append(validTrafficControlTasks, task)
+					return true
 				} else {
-					continue
+					return false
 				}
-			} else if env == common.Environment_Prepub_Desc {
+			} else if env == common.OpenAPIEnvironmentPrepub {
 				if task.PrepubStatus == common.TrafficCtrlTask_Running_Status && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
-					validTrafficControlTasks = append(validTrafficControlTasks, task)
+					return true
 				} else {
-					continue
+					return false
 				}
 
 			}
-		} else {
-			if env == common.Environment_Product_Desc {
+		} else { // 任务永久运行
+			if env == common.OpenAPIEnvironmentProduct {
 				if task.ProductStatus == common.TrafficCtrlTask_Running_Status {
-					validTrafficControlTasks = append(validTrafficControlTasks, task)
+					return true
 				} else {
-					continue
+					return false
 				}
-			} else if env == common.Environment_Prepub_Desc {
+			} else if env == common.OpenAPIEnvironmentPrepub {
 				if task.PrepubStatus == common.TrafficCtrlTask_Running_Status {
-					validTrafficControlTasks = append(validTrafficControlTasks, task)
+					return true
 				} else {
-					continue
+					return false
 				}
 			}
 		}
 	}
-
-	// filter valid traffic control target
-	for _, task := range validTrafficControlTasks {
-		validTargets := make([]*model.TrafficControlTarget, 0)
-		for _, target := range task.TrafficControlTargets {
-			if e.isValidTrafficControlTarget(target) {
-				validTargets = append(validTargets, target)
-			}
-		}
-		task.TrafficControlTargets = validTargets
-	}
-
-	return validTrafficControlTasks
+	err := errors.New(fmt.Sprintf("task execution time is nil,please check task(%s/%s)", task.TrafficControlTaskId, task.Name))
+	e.logError(err)
+	return false
 }
 
 func (e *ExperimentClient) isValidTrafficControlTarget(target *model.TrafficControlTarget) bool {
@@ -174,10 +249,13 @@ type TrafficControlTargetTraffic struct {
 }
 
 func (e *ExperimentClient) GetTrafficControlActualTraffic(env string, expIdOrItemIdList ...string) map[string][]*TrafficControlTargetTraffic {
-	tasks := e.ListTrafficControlTasks(env)
-
+	tasks := make([]*model.TrafficControlTask, 0)
+	if env == common.Environment_Prepub_Desc {
+		tasks = e.prepubTrafficControlTasks
+	} else if env == common.Environment_Product_Desc {
+		tasks = e.productTrafficControlTasks
+	}
 	resultTrafficsMap := make(map[string][]*TrafficControlTargetTraffic, 0) // key: target_id
-
 	if len(expIdOrItemIdList) == 0 {
 		return resultTrafficsMap
 	}
@@ -253,98 +331,6 @@ type ListTrafficControlTasksQueryParams struct {
 	PageNumber           string
 	PageSize             string
 	ALL                  bool
-}
-
-// 调用 openAPI 获取 task 以及每个 task 的 traffic
-func (e *ExperimentClient) listTrafficControlTasks(params *ListTrafficControlTasksQueryParams) (api.ListTrafficControlTasksResponse, error) {
-	listTrafficControlTasksRequest := &pairecv2.ListTrafficControlTasksRequest{}
-	listTrafficControlTasksRequest.InstanceId = tea.String(e.InstanceId)
-	listTrafficControlTasksRequest.Environment = tea.String(params.Env)
-	listTrafficControlTasksRequest.Status = tea.String(params.Status)
-	listTrafficControlTasksRequest.Version = tea.String(params.Version)
-	listTrafficControlTasksRequest.ControlTargetFilter = tea.String(params.ControlTargetFilter)
-	listTrafficControlTasksRequest.All = tea.Bool(params.ALL)
-
-	localVarReturnValue := api.ListTrafficControlTasksResponse{}
-	response, err := e.APIClientV2.ListTrafficControlTasks(listTrafficControlTasksRequest)
-
-	if err != nil {
-		return localVarReturnValue, err
-	}
-
-	for _, trafficControlTask := range response.Body.TrafficControlTasks {
-
-		// filter by service name
-		if serviceName != "" {
-			var find bool
-
-			// 兼容旧数据
-			if trafficControlTask.ServiceId != nil && *trafficControlTask.ServiceId != "" {
-				getServiceRequest := &pairecv2.GetServiceRequest{
-					InstanceId: tea.String(e.InstanceId),
-				}
-				serviceResponse, err := e.APIClientV2.GetService(trafficControlTask.ServiceId, getServiceRequest)
-				if err != nil {
-					return localVarReturnValue, err
-				}
-				var taskServiceName string
-				if params.Env == common.OpenAPIEnvironmentPrepub {
-					taskServiceName = fmt.Sprintf("%s_%s", *serviceResponse.Body.Name, common.Environment_Prepub_Desc)
-				} else {
-					taskServiceName = *serviceResponse.Body.Name
-				}
-				if taskServiceName == serviceName {
-					find = true
-				}
-			}
-
-			for _, serviceId := range trafficControlTask.ServiceIdList {
-				getServiceRequest := &pairecv2.GetServiceRequest{}
-				getServiceRequest.InstanceId = tea.String(e.InstanceId)
-				serviceResponse, err := e.APIClientV2.GetService(tea.String(strconv.Itoa(int(*serviceId))), getServiceRequest)
-				if err != nil {
-					return localVarReturnValue, err
-				}
-				var taskServiceName string
-				if params.Env == common.OpenAPIEnvironmentPrepub {
-					taskServiceName = fmt.Sprintf("%s_%s", *serviceResponse.Body.Name, common.Environment_Prepub_Desc)
-				} else {
-					taskServiceName = *serviceResponse.Body.Name
-				}
-				if taskServiceName == serviceName {
-					find = true
-					break
-				}
-			}
-			if !find {
-				continue
-			}
-		}
-		task := model.TrafficControlTaskConvert(trafficControlTask)
-
-		for _, trafficControlTarget := range trafficControlTask.TrafficControlTargets {
-
-			target := model.TrafficControlTargetConvert(trafficControlTarget)
-
-			task.TrafficControlTargets = append(task.TrafficControlTargets, target)
-		}
-		// 获取每个 task 的实际流量
-		getTrafficRequest := &pairecv2.GetTrafficControlTaskTrafficRequest{}
-		getTrafficRequest.InstanceId = tea.String(e.InstanceId)
-		getTrafficRequest.Environment = listTrafficControlTasksRequest.Environment
-		trafficResponse, err := e.APIClientV2.GetTrafficControlTaskTraffic(tea.String(task.TrafficControlTaskId), getTrafficRequest)
-		if err != nil {
-			return localVarReturnValue, err
-		}
-		actualTraffic := model.ActualTrafficConvert(trafficResponse.Body.TrafficControlTaskTrafficInfo)
-
-		task.ActualTraffic = actualTraffic
-
-		localVarReturnValue.TrafficControlTasks = append(localVarReturnValue.TrafficControlTasks, task)
-
-	}
-
-	return localVarReturnValue, nil
 }
 
 func isItemInArray(element string, array []string) bool {

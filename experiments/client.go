@@ -127,8 +127,8 @@ func NewExperimentClient(instanceId, regionId, accessKeyId, accessKeySecret, env
 	go client.loopLoadExperimentData()
 	go client.loopLoadSceneParamsData()
 
-	client.loadTrafficControlTasks()
-	go client.loopLoadTrafficControlTasks()
+	//client.LoadTrafficControlTasks()
+	//go client.LoopLoadTrafficControlTasks()
 
 	return &client, nil
 }
@@ -278,5 +278,13 @@ func (e *ExperimentClient) hashValue(hashKey string) uint64 {
 func (e *ExperimentClient) logInfo(msg string, args ...interface{}) {
 	if e.Logger != nil {
 		e.Logger.Printf(msg, args...)
+	}
+}
+
+func (e *ExperimentClient) ListTrafficControlTasks(env string) []*model.TrafficControlTask {
+	if env == common.Environment_Prepub_Desc {
+		return e.prepubTrafficControlTasks
+	} else {
+		return e.productTrafficControlTasks
 	}
 }

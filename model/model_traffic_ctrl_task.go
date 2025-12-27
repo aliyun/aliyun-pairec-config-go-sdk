@@ -5,42 +5,42 @@ import (
 )
 
 type TrafficControlTask struct {
-	TrafficControlTaskId           string                  `json:"TrafficControlTaskId" xml:"TrafficControlTaskId"`
-	Name                           string                  `json:"Name" xml:"Name"`
-	Description                    string                  `json:"Description" xml:"Description"`
-	SceneId                        string                  `json:"SceneId" xml:"SceneId"`
-	SceneName                      string                  `json:"SceneName" xml:"SceneName"`
+	TrafficControlTaskId           string                  `json:"TrafficControlTaskId"`
+	Name                           string                  `json:"Name"`
+	Description                    string                  `json:"Description"`
+	SceneId                        string                  `json:"SceneId"`
+	SceneName                      string                  `json:"SceneName"`
 	EffectiveSceneIds              []int                   `json:"EffectiveSceneIds"`
 	EffectiveSceneNames            []string                `json:"EffectiveSceneNames"`
-	ProductStatus                  string                  `json:"ProductStatus" xml:"ProductStatus"`
-	PrepubStatus                   string                  `json:"PrepubStatus" xml:"PrepubStatus"`
-	ExecutionTime                  string                  `json:"ExecutionTime" xml:"ExecutionTime"`
-	StartTime                      string                  `json:"StartTime" xml:"StartTime"`
-	EndTime                        string                  `json:"EndTime" xml:"EndTime"`
-	BehaviorTableMetaId            string                  `json:"BehaviorTableMetaId" xml:"BehaviorTableMetaId"`
-	UserTableMetaId                string                  `json:"UserTableMetaId" xml:"UserTableMetaId"`
-	ItemTableMetaId                string                  `json:"ItemTableMetaId" xml:"ItemTableMetaId"`
-	UserConditionType              string                  `json:"UserConditionType" xml:"UserConditionType"`
-	UserConditionArray             string                  `json:"UserConditionArray" xml:"UserConditionArray"`
-	UserConditionExpress           string                  `json:"UserConditionExpress" xml:"UserConditionExpress"`
-	StatisBehaviorConditionType    string                  `json:"StatisBehaviorConditionType" xml:"StatisBehaviorConditionType"`
-	StatisBehaviorConditionArray   string                  `json:"StatisBehaviorConditionArray" xml:"StatisBehaviorConditionArray"`
-	StatisBehaviorConditionExpress string                  `json:"StatisBehaviorConditionExpress" xml:"StatisBehaviorConditionExpress"`
-	ControlType                    string                  `json:"ControlType" xml:"ControlType"`
-	ControlGranularity             string                  `json:"ControlGranularity" xml:"ControlGranularity"`
-	ControlLogic                   string                  `json:"ControlLogic" xml:"ControlLogic"`
-	ItemConditionType              string                  `json:"ItemConditionType" xml:"ItemConditionType"`
-	ItemConditionArray             string                  `json:"ItemConditionArray" xml:"ItemConditionArray"`
-	ItemConditionExpress           string                  `json:"ItemConditionExpress" xml:"ItemConditionExpress"`
+	ProductStatus                  string                  `json:"ProductStatus"`
+	PrepubStatus                   string                  `json:"PrepubStatus"`
+	ExecutionTime                  string                  `json:"ExecutionTime"`
+	StartTime                      string                  `json:"StartTime"`
+	EndTime                        string                  `json:"EndTime"`
+	BehaviorTableMetaId            string                  `json:"BehaviorTableMetaId"`
+	UserTableMetaId                string                  `json:"UserTableMetaId"`
+	ItemTableMetaId                string                  `json:"ItemTableMetaId"`
+	UserConditionType              string                  `json:"UserConditionType"`
+	UserConditionArray             string                  `json:"UserConditionArray"`
+	UserConditionExpress           string                  `json:"UserConditionExpress"`
+	StatisBehaviorConditionType    string                  `json:"StatisBehaviorConditionType"`
+	StatisBehaviorConditionArray   string                  `json:"StatisBehaviorConditionArray"`
+	StatisBehaviorConditionExpress string                  `json:"StatisBehaviorConditionExpress"`
+	ControlType                    string                  `json:"ControlType"`
+	ControlGranularity             string                  `json:"ControlGranularity"`
+	ControlLogic                   string                  `json:"ControlLogic"`
+	ItemConditionType              string                  `json:"ItemConditionType"`
+	ItemConditionArray             string                  `json:"ItemConditionArray"`
+	ItemConditionExpress           string                  `json:"ItemConditionExpress"`
 	ReleaseStage                   string                  `json:"ReleaseStage"`
-	GmtCreateTime                  string                  `json:"GmtCreateTime" xml:"GmtCreateTime"`
-	GmtModifiedTime                string                  `json:"GmtModifiedTime" xml:"GmtModifiedTime"`
+	GmtCreateTime                  string                  `json:"GmtCreateTime"`
+	GmtModifiedTime                string                  `json:"GmtModifiedTime"`
 	EverPublished                  bool                    `json:"EverPublished"`
 	ServiceId                      string                  `json:"ServiceId"`
 	ServiceIds                     []int                   `json:"ServiceIds"`
 	PreExperimentIds               string                  `json:"PreExperimentIds"`
 	ProdExperimentIds              string                  `json:"ProdExperimentIds"`
-	TrafficControlTargets          []*TrafficControlTarget `json:"TrafficControlTargets" xml:"TrafficControlTargets"`
+	TrafficControlTargets          []*TrafficControlTarget `json:"TrafficControlTargets"`
 
 	ActualTraffic TrafficControlActualTraffic `json:"ActualTraffic"`
 }
@@ -63,7 +63,12 @@ func TrafficControlTaskConvert(trafficControlTask *pairecv2.ListTrafficControlTa
 
 	task.ProductStatus = *trafficControlTask.ProductStatus
 	task.PrepubStatus = *trafficControlTask.PrepubStatus
-	task.ExecutionTime = *trafficControlTask.ExecutionTime
+	if trafficControlTask.ExecutionTime != nil {
+		task.ExecutionTime = *trafficControlTask.ExecutionTime
+	} else {
+		task.ExecutionTime = ""
+	}
+
 	task.StartTime = *trafficControlTask.StartTime
 	task.EndTime = *trafficControlTask.EndTime
 	task.BehaviorTableMetaId = *trafficControlTask.BehaviorTableMetaId
@@ -100,24 +105,24 @@ func TrafficControlTaskConvert(trafficControlTask *pairecv2.ListTrafficControlTa
 }
 
 type TrafficControlTarget struct {
-	TrafficControlTaskId   string                         `json:"TrafficControlTaskId" xml:"TrafficControlTaskId"`
-	Name                   string                         `json:"Name" xml:"Name"`
-	Event                  string                         `json:"Event" xml:"Event"`
-	GmtModifiedTime        string                         `json:"GmtModifiedTime" xml:"GmtModifiedTime"`
-	ToleranceValue         int64                          `json:"ToleranceValue" xml:"ToleranceValue"`
-	Value                  float32                        `json:"Value" xml:"Value"`
-	TrafficControlTargetId string                         `json:"TrafficControlTargetId" xml:"TrafficControlTargetId"`
-	ItemConditionType      string                         `json:"ItemConditionType" xml:"ItemConditionType"`
-	StartTime              string                         `json:"StartTime" xml:"StartTime"`
-	GmtCreateTime          string                         `json:"GmtCreateTime" xml:"GmtCreateTime"`
-	EndTime                string                         `json:"EndTime" xml:"EndTime"`
-	StatisPeriod           string                         `json:"StatisPeriod" xml:"StatisPeriod"`
-	NewProductRegulation   bool                           `json:"NewProductRegulation" xml:"NewProductRegulation"`
-	ItemConditionArray     string                         `json:"ItemConditionArray" xml:"ItemConditionArray"`
-	Status                 string                         `json:"Status" xml:"Status"`
-	RecallName             string                         `json:"RecallName" xml:"RecallName"`
-	ItemConditionExpress   string                         `json:"ItemConditionExpress" xml:"ItemConditionExpress"`
-	SplitParts             TrafficControlTargetSplitParts `json:"SplitParts" xml:"SplitParts"`
+	TrafficControlTaskId   string                         `json:"TrafficControlTaskId"`
+	Name                   string                         `json:"Name"`
+	Event                  string                         `json:"Event"`
+	GmtModifiedTime        string                         `json:"GmtModifiedTime"`
+	ToleranceValue         int64                          `json:"ToleranceValue"`
+	Value                  float32                        `json:"Value"`
+	TrafficControlTargetId string                         `json:"TrafficControlTargetId"`
+	ItemConditionType      string                         `json:"ItemConditionType"`
+	StartTime              string                         `json:"StartTime"`
+	GmtCreateTime          string                         `json:"GmtCreateTime"`
+	EndTime                string                         `json:"EndTime"`
+	StatisPeriod           string                         `json:"StatisPeriod"`
+	NewProductRegulation   bool                           `json:"NewProductRegulation"`
+	ItemConditionArray     string                         `json:"ItemConditionArray"`
+	Status                 string                         `json:"Status"`
+	RecallName             string                         `json:"RecallName"`
+	ItemConditionExpress   string                         `json:"ItemConditionExpress"`
+	SplitParts             TrafficControlTargetSplitParts `json:"SplitParts"`
 }
 
 func TrafficControlTargetConvert(trafficControlTarget *pairecv2.ListTrafficControlTasksResponseBodyTrafficControlTasksTrafficControlTargets) *TrafficControlTarget {

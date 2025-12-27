@@ -106,3 +106,8 @@ const (
 	TrafficControlTargets_Status_Open  = "Opened"
 	TrafficControlTargets_Status_Close = "Closed"
 )
+
+const (
+	TrafficControlTaskExecutionTimeOfPermanent = "Permanent"
+	TrafficControlTaskExecutionTimeOfTimeRange = "TimeRange"
+)

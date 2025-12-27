@@ -127,8 +127,8 @@ func NewExperimentClient(instanceId, regionId, accessKeyId, accessKeySecret, env
 	go client.loopLoadExperimentData()
 	go client.loopLoadSceneParamsData()
 
-	//client.LoadTrafficControlTasks()
-	//go client.LoopLoadTrafficControlTasks()
+	client.LoadTrafficControlTasks()
+	go client.LoopLoadTrafficControlTasks()
 
 	return &client, nil
 }

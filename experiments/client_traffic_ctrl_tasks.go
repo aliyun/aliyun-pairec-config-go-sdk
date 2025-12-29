@@ -1,11 +1,13 @@
 package experiments
 
 import (
+	"errors"
 	"fmt"
+	pairecv2 "github.com/alibabacloud-go/pairecservice-20221213/v3/client"
+	"github.com/alibabacloud-go/tea/tea"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/api"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/model"
-	"github.com/antihax/optional"
 	"os"
 	"strconv"
 	"strings"
@@ -23,199 +25,218 @@ func init() {
 		serviceName = valueArr[0]
 	}
 }
-func (e *ExperimentClient) LoadSceneTrafficControlTasksData() {
+func (e *ExperimentClient) LoadTrafficControlTasks() {
 	//Load traffic control data for the production environment
-	prodSceneTrafficControlTasksData := make(map[string][]model.TrafficControlTask, 0)
-	prodOpt := &api.TrafficControlApiListTrafficControlTasksOpts{
-		ALL:                 optional.NewBool(true),
-		ControlTargetFilter: optional.NewString("Valid"),
-		Env:                 optional.NewString("product"),
-		Status:              optional.NewString("Running"),
-		Version:             optional.NewString("Released"),
+	productTrafficControlTasks := make([]*model.TrafficControlTask, 0)
+	prodQueryParams := &ListTrafficControlTasksQueryParams{
+		ALL:                 true,
+		ControlTargetFilter: "Valid",
+		Env:                 "Prod",
+		Status:              "Running",
+		Version:             "Released",
 	}
-	prodResponse, err := e.APIClient.TrafficControlApi.ListTrafficControlTasks(prodOpt, serviceName)
+	prodResponse, err := e.listTrafficControlTasks(prodQueryParams)
 	if err != nil {
-		e.logError(fmt.Errorf("list flow tasks error, err=%v", err))
+		e.logError(fmt.Errorf("list traffic control tasks error, err=%v", err))
 		return
 	}
 
 	for _, task := range prodResponse.TrafficControlTasks {
-		prodSceneTrafficControlTasksData[task.SceneName] = append(prodSceneTrafficControlTasksData[task.SceneName], task)
+		productTrafficControlTasks = append(productTrafficControlTasks, task)
 	}
 
-	if len(prodSceneTrafficControlTasksData) > 0 {
-		e.productSceneTrafficControlTaskData = prodSceneTrafficControlTasksData
+	prepubTrafficControlTasks := make([]*model.TrafficControlTask, 0)
+	preQueryParams := &ListTrafficControlTasksQueryParams{
+		ALL:                 true,
+		ControlTargetFilter: "Valid",
+		Env:                 "Pre",
+		Status:              "Running",
+		Version:             "Released",
 	}
-
-	//Load traffic control data for the pre-load environment
-	prepubSceneTrafficControlTasksData := make(map[string][]model.TrafficControlTask, 0)
-	prePubOpt := &api.TrafficControlApiListTrafficControlTasksOpts{
-		ALL:                 optional.NewBool(true),
-		ControlTargetFilter: optional.NewString("Valid"),
-		Env:                 optional.NewString("prepub"),
-		Status:              optional.NewString("Running"),
-		Version:             optional.NewString("Released"),
-	}
-	prePubResponse, _ := e.APIClient.TrafficControlApi.ListTrafficControlTasks(prePubOpt, serviceName)
+	prePubResponse, _ := e.listTrafficControlTasks(preQueryParams)
 	if err != nil {
-		e.logError(fmt.Errorf("list flow tasks error,error=%v", err))
+		e.logError(fmt.Errorf("list traffic control tasks error,error=%v", err))
 		return
 	}
 
 	for _, task := range prePubResponse.TrafficControlTasks {
-		prepubSceneTrafficControlTasksData[task.SceneName] = append(prepubSceneTrafficControlTasksData[task.SceneName], task)
+		prepubTrafficControlTasks = append(prepubTrafficControlTasks, task)
 	}
 
-	if len(prepubSceneTrafficControlTasksData) > 0 {
-		e.prepubSceneTrafficControlTaskData = prepubSceneTrafficControlTasksData
-	}
+	e.productTrafficControlTasks = productTrafficControlTasks
+	e.prepubTrafficControlTasks = prepubTrafficControlTasks
 
 }
 
-// loopLoadSceneFlowCtrlPlansData async loop invoke LoadSceneFlowCtrlPlansData function
-func (e *ExperimentClient) loopLoadSceneFlowCtrlPlansData() {
+func (e *ExperimentClient) LoopLoadTrafficControlTasks() {
 
 	for {
 		time.Sleep(time.Second * 30)
-		e.LoadSceneTrafficControlTasksData()
+		e.LoadTrafficControlTasks()
 	}
 }
 
-func (e *ExperimentClient) SetTrafficControlTraffic(trafficData model.TrafficControlTaskTrafficData) (string, error) {
-	response, err := e.APIClient.TrafficControlApi.SetTrafficControlTrafficFData(trafficData)
-	return response, err
-}
+// 调用 openAPI 获取 task 以及每个 task 的 traffic
+func (e *ExperimentClient) listTrafficControlTasks(params *ListTrafficControlTasksQueryParams) (api.ListTrafficControlTasksResponse, error) {
+	listTrafficControlTasksRequest := &pairecv2.ListTrafficControlTasksRequest{}
+	listTrafficControlTasksRequest.InstanceId = tea.String(e.InstanceId)
+	listTrafficControlTasksRequest.Environment = tea.String(params.Env)
+	listTrafficControlTasksRequest.Status = tea.String(params.Status)
+	listTrafficControlTasksRequest.Version = tea.String(params.Version)
+	listTrafficControlTasksRequest.ControlTargetFilter = tea.String(params.ControlTargetFilter)
+	listTrafficControlTasksRequest.All = tea.Bool(params.ALL)
 
-func (e *ExperimentClient) GetTrafficControlTargetData(env, sceneName string, currentTimestamp int64) map[string]model.TrafficControlTarget {
-	if currentTimestamp == 0 {
-		currentTimestamp = time.Now().Unix()
+	localVarReturnValue := api.ListTrafficControlTasksResponse{}
+	response, err := e.APIClientV2.ListTrafficControlTasks(listTrafficControlTasksRequest)
+
+	if err != nil {
+		return localVarReturnValue, err
 	}
 
-	trafficControlTargets := make(map[string]model.TrafficControlTarget)
-
-	var data = make(map[string][]model.TrafficControlTask, 0)
-
-	if env == common.Environment_Prepub_Desc {
-		data = e.prepubSceneTrafficControlTaskData
-	} else if env == common.Environment_Product_Desc {
-		data = e.productSceneTrafficControlTaskData
-	} else {
-		return nil
-	}
-
-	for scene, sceneTraffics := range data {
-		if sceneName != "" && sceneName != scene {
+	for _, trafficControlTask := range response.Body.TrafficControlTasks {
+		task := model.TrafficControlTaskConvert(trafficControlTask)
+		ok := e.isValidTrafficControlTask(params.Env, task)
+		if !ok {
 			continue
 		}
+		// filter by service name
+		if serviceName != "" {
+			var find bool
 
-		for _, task := range sceneTraffics {
-			for i, target := range task.TrafficControlTargets {
-				if task.ExecutionTime != "Permanent" {
-					startTime, _ := time.Parse(time.RFC3339, target.StartTime)
-					endTime, _ := time.Parse(time.RFC3339, target.EndTime)
-
-					if target.Status == common.TrafficControlTargets_Status_Open && startTime.Unix() < currentTimestamp && currentTimestamp <= endTime.Unix() {
-						trafficControlTargets[target.TrafficControlTargetId] = task.TrafficControlTargets[i]
-					}
-
+			// 兼容旧数据
+			if trafficControlTask.ServiceId != nil && *trafficControlTask.ServiceId != "" {
+				getServiceRequest := &pairecv2.GetServiceRequest{
+					InstanceId: tea.String(e.InstanceId),
+				}
+				serviceResponse, err := e.APIClientV2.GetService(trafficControlTask.ServiceId, getServiceRequest)
+				if err != nil {
+					return localVarReturnValue, err
+				}
+				var taskServiceName string
+				if params.Env == common.OpenAPIEnvironmentPrepub {
+					taskServiceName = fmt.Sprintf("%s_%s", *serviceResponse.Body.Name, common.Environment_Prepub_Desc)
 				} else {
-					if target.Status == common.TrafficControlTargets_Status_Open {
-						trafficControlTargets[target.TrafficControlTargetId] = task.TrafficControlTargets[i]
-					}
+					taskServiceName = *serviceResponse.Body.Name
 				}
-
-			}
-		}
-	}
-
-	return trafficControlTargets
-}
-
-func (e *ExperimentClient) GetTrafficControlTaskMetaData(env string, currentTimestamp int64) []model.TrafficControlTask {
-	if currentTimestamp == 0 {
-		currentTimestamp = time.Now().Unix()
-	}
-
-	traffics := make([]model.TrafficControlTask, 0)
-
-	var data = make(map[string][]model.TrafficControlTask, 0)
-
-	if env == common.Environment_Prepub_Desc {
-		data = e.prepubSceneTrafficControlTaskData
-	} else if env == common.Environment_Product_Desc {
-		data = e.productSceneTrafficControlTaskData
-	} else {
-		return nil
-	}
-
-	for _, sceneTraffics := range data {
-		for i, task := range sceneTraffics {
-			if task.ExecutionTime != "Permanent" {
-				startTime, _ := time.Parse(time.RFC3339, task.StartTime)
-				endTime, _ := time.Parse(time.RFC3339, task.EndTime)
-
-				if env == common.Environment_Product_Desc {
-					if task.ProductStatus == common.TrafficCtrlTask_Running_Status && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
-						traffics = append(traffics, sceneTraffics[i])
-					}
-				} else if env == common.Environment_Prepub_Desc {
-					if task.PrepubStatus == common.TrafficCtrlTask_Running_Status && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
-						traffics = append(traffics, sceneTraffics[i])
-					}
-
-				}
-			} else {
-				if env == common.Environment_Product_Desc {
-					if task.ProductStatus == common.TrafficCtrlTask_Running_Status {
-						traffics = append(traffics, sceneTraffics[i])
-					}
-				} else if env == common.Environment_Prepub_Desc {
-					if task.PrepubStatus == common.TrafficCtrlTask_Running_Status {
-						traffics = append(traffics, sceneTraffics[i])
-					}
+				if taskServiceName == serviceName {
+					find = true
 				}
 			}
 
+			for _, serviceId := range trafficControlTask.ServiceIdList {
+				getServiceRequest := &pairecv2.GetServiceRequest{}
+				getServiceRequest.InstanceId = tea.String(e.InstanceId)
+				serviceResponse, err := e.APIClientV2.GetService(tea.String(strconv.Itoa(int(*serviceId))), getServiceRequest)
+				if err != nil {
+					return localVarReturnValue, err
+				}
+				var taskServiceName string
+				if params.Env == common.OpenAPIEnvironmentPrepub {
+					taskServiceName = fmt.Sprintf("%s_%s", *serviceResponse.Body.Name, common.Environment_Prepub_Desc)
+				} else {
+					taskServiceName = *serviceResponse.Body.Name
+				}
+				if taskServiceName == serviceName {
+					find = true
+					break
+				}
+			}
+			if !find {
+				continue
+			}
 		}
+
+		for _, trafficControlTarget := range trafficControlTask.TrafficControlTargets {
+			target := model.TrafficControlTargetConvert(trafficControlTarget)
+			isValid := e.isValidTrafficControlTarget(target)
+			if !isValid {
+				continue
+			}
+			task.TrafficControlTargets = append(task.TrafficControlTargets, target)
+		}
+		// 获取每个 task 的实际流量
+		getTrafficRequest := &pairecv2.GetTrafficControlTaskTrafficRequest{}
+		getTrafficRequest.InstanceId = tea.String(e.InstanceId)
+		getTrafficRequest.Environment = listTrafficControlTasksRequest.Environment
+		trafficResponse, err := e.APIClientV2.GetTrafficControlTaskTraffic(tea.String(task.TrafficControlTaskId), getTrafficRequest)
+		if err != nil {
+			return localVarReturnValue, err
+		}
+		actualTraffic := model.ActualTrafficConvert(trafficResponse.Body.TrafficControlTaskTrafficInfo)
+
+		task.ActualTraffic = actualTraffic
+		localVarReturnValue.TrafficControlTasks = append(localVarReturnValue.TrafficControlTasks, task)
 	}
-	return traffics
+
+	return localVarReturnValue, nil
 }
 
-func (e *ExperimentClient) CheckIfTrafficControlTargetIsEnabled(env string, targetId int, currentTimestamp int64) bool {
-	if currentTimestamp == 0 {
-		currentTimestamp = time.Now().Unix()
+func (e *ExperimentClient) isValidTrafficControlTask(env string, task *model.TrafficControlTask) bool {
+	currentTimestamp := time.Now().Unix()
+
+	// filter valid traffic control task
+	if task.ExecutionTime != "" {
+		// 任务为某个时间段有效
+		if task.ExecutionTime != common.TrafficControlTaskExecutionTimeOfPermanent {
+			startTime, _ := time.Parse(time.RFC3339, task.StartTime)
+			endTime, _ := time.Parse(time.RFC3339, task.EndTime)
+
+			if env == common.OpenAPIEnvironmentProduct {
+				if task.ProductStatus == common.TrafficCtrlTask_Running_Status && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
+					return true
+				} else {
+					return false
+				}
+			} else if env == common.OpenAPIEnvironmentPrepub {
+				if task.PrepubStatus == common.TrafficCtrlTask_Running_Status && startTime.Unix() <= currentTimestamp && currentTimestamp < endTime.Unix() {
+					return true
+				} else {
+					return false
+				}
+
+			}
+		} else { // 任务永久运行
+			if env == common.OpenAPIEnvironmentProduct {
+				if task.ProductStatus == common.TrafficCtrlTask_Running_Status {
+					return true
+				} else {
+					return false
+				}
+			} else if env == common.OpenAPIEnvironmentPrepub {
+				if task.PrepubStatus == common.TrafficCtrlTask_Running_Status {
+					return true
+				} else {
+					return false
+				}
+			}
+		}
 	}
+	err := errors.New(fmt.Sprintf("task execution time is nil,please check task(%s/%s)", task.TrafficControlTaskId, task.Name))
+	e.logError(err)
+	return false
+}
 
-	var data = make(map[string][]model.TrafficControlTask, 0)
+func (e *ExperimentClient) isValidTrafficControlTarget(target *model.TrafficControlTarget) bool {
+	currentTimestamp := time.Now().Unix()
 
-	if env == common.Environment_Prepub_Desc {
-		data = e.prepubSceneTrafficControlTaskData
-	} else if env == common.Environment_Product_Desc {
-		data = e.productSceneTrafficControlTaskData
-	} else {
+	startTime, _ := time.Parse(time.RFC3339, target.StartTime)
+	endTime, _ := time.Parse(time.RFC3339, target.EndTime)
+
+	// 不在时间范围内
+	if startTime.Unix() > currentTimestamp || currentTimestamp >= endTime.Unix() {
 		return false
 	}
 
-	for _, sceneTraffics := range data {
-		for _, traffic := range sceneTraffics {
-			for _, target := range traffic.TrafficControlTargets {
-				tid, err := strconv.Atoi(target.TrafficControlTargetId)
-				if err != nil {
-					e.logError(fmt.Errorf("traffic control targetId is illegal"))
-				}
-
-				if tid == targetId {
-					startTime, _ := time.Parse(time.RFC3339, target.StartTime)
-					endTime, _ := time.Parse(time.RFC3339, target.EndTime)
-
-					if target.Status == common.TrafficControlTargets_Status_Open && startTime.Unix() < currentTimestamp && currentTimestamp < endTime.Unix() {
-						return true
-					}
-				}
-			}
-		}
+	// 状态过滤
+	if target.Status == common.TrafficControlTargetStatusOfClosed {
+		return false
 	}
-	return false
+
+	if target.TrafficControlTargetId == "" {
+		return false
+	}
+
+	return true
 }
 
 type TrafficControlTargetTraffic struct {
@@ -227,33 +248,96 @@ type TrafficControlTargetTraffic struct {
 	RecordTime             time.Time `json:"record_time"`
 }
 
-func (e *ExperimentClient) GetTrafficControlTargetTraffic(env, sceneName string, idList ...string) []TrafficControlTargetTraffic {
-	targets := e.GetTrafficControlTargetData(env, sceneName, 0)
-
-	var traffics []TrafficControlTargetTraffic
-
-	idMap := make(map[string]bool)
-	for _, id := range idList {
-		if id == "" {
-			continue
-		}
-		idMap[id] = true
+func (e *ExperimentClient) GetTrafficControlActualTraffic(env string, expIdOrItemIdList ...string) map[string][]*TrafficControlTargetTraffic {
+	tasks := make([]*model.TrafficControlTask, 0)
+	if env == common.Environment_Prepub_Desc {
+		tasks = e.prepubTrafficControlTasks
+	} else if env == common.Environment_Product_Desc {
+		tasks = e.productTrafficControlTasks
+	}
+	resultTrafficsMap := make(map[string][]*TrafficControlTargetTraffic, 0) // key: target_id
+	if len(expIdOrItemIdList) == 0 {
+		return resultTrafficsMap
 	}
 
-	for _, trafficTarget := range targets {
-		for id, value := range trafficTarget.TargetTraffics {
-			if len(idList) == 0 || idMap[id] {
-				traffics = append(traffics, TrafficControlTargetTraffic{
-					ItemOrExpId:            id,
-					TrafficControlTaskId:   trafficTarget.TrafficControlTaskId,
-					TrafficControlTargetId: trafficTarget.TrafficControlTargetId,
-					TargetTraffic:          value,
-					TaskTraffic:            trafficTarget.TaskTraffics[id],
-					RecordTime:             trafficTarget.RecordTime,
-				})
+	tmpActualTrafficMap := make(map[string]*TrafficControlTargetTraffic, 0)
+
+	for _, task := range tasks {
+		taskTrafficMap := task.ActualTraffic.TaskTraffics
+		for _, target := range task.TrafficControlTargets {
+			targetTraffic, ok := getTargetTraffic(target.TrafficControlTargetId, task.ActualTraffic.TargetTraffics)
+			if ok {
+				for expOrItemId, targetTrafficDetail := range targetTraffic.Data {
+
+					key := fmt.Sprintf("%s@%s", target.TrafficControlTargetId, expOrItemId)
+					recordTime := time.Unix(targetTrafficDetail.RecordTime, 0)
+
+					taskTraffic := taskTrafficMap[expOrItemId]
+					tmpTrafficInfo := &TrafficControlTargetTraffic{
+						ItemOrExpId:            expOrItemId,
+						TrafficControlTaskId:   task.TrafficControlTaskId,
+						TrafficControlTargetId: target.TrafficControlTargetId,
+						TargetTraffic:          targetTrafficDetail.Traffic,
+						RecordTime:             recordTime,
+						TaskTraffic:            taskTraffic.Traffic,
+					}
+					tmpActualTrafficMap[key] = tmpTrafficInfo
+				}
 			}
 		}
 	}
 
-	return traffics
+	var traffics []*TrafficControlTargetTraffic
+
+	// filter valid traffic control target
+	for _, actualTraffic := range tmpActualTrafficMap {
+		ok := isItemInArray(actualTraffic.ItemOrExpId, expIdOrItemIdList)
+		if ok {
+			traffics = append(traffics, actualTraffic)
+		}
+	}
+
+	for _, traffic := range traffics {
+		_, ok := resultTrafficsMap[traffic.TrafficControlTargetId]
+		if ok {
+			resultTrafficsMap[traffic.TrafficControlTargetId] = append(resultTrafficsMap[traffic.TrafficControlTargetId], traffic)
+		} else {
+			resultTrafficsMap[traffic.TrafficControlTargetId] = []*TrafficControlTargetTraffic{traffic}
+		}
+	}
+
+	return resultTrafficsMap
+}
+
+func getTargetTraffic(targetId string, targetTraffics []*model.TargetTraffic) (*model.TargetTraffic, bool) {
+	for _, targetTraffic := range targetTraffics {
+		if targetTraffic.TrafficControlTargetId == targetId {
+			return targetTraffic, true
+		}
+	}
+	return nil, false
+}
+
+type ListTrafficControlTasksQueryParams struct {
+	Name                 string
+	TrafficControlTaskId string
+	SceneId              int32
+	Env                  string
+	Status               string
+	Version              string
+	ControlTargetFilter  string
+	SortBy               string
+	Order                string
+	PageNumber           string
+	PageSize             string
+	ALL                  bool
+}
+
+func isItemInArray(element string, array []string) bool {
+	for _, value := range array {
+		if element == value {
+			return true
+		}
+	}
+	return false
 }

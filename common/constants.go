@@ -8,9 +8,12 @@ const (
 	Environment_Prepub  = 2
 	Environment_Product = 4
 
-	Environment_Daily_Desc   = "daily"
-	Environment_Prepub_Desc  = "prepub"
-	Environment_Product_Desc = "product"
+	Environment_Daily_Desc    = "daily"
+	Environment_Prepub_Desc   = "prepub"
+	Environment_Product_Desc  = "product"
+	OpenAPIEnvironmentDaily   = "Daily"
+	OpenAPIEnvironmentPrepub  = "Pre"
+	OpenAPIEnvironmentProduct = "Prod"
 
 	Bucket_Type_UID      = uint32(1)
 	Bucket_Type_UID_HASH = uint32(2)
@@ -53,9 +56,10 @@ const (
 	Version_Latest   = "Latest"
 	Version_Released = "Released"
 
-	ControlTargetFilter_All   = "ALL"
-	ControlTargetFilter_Vaild = "Valid"
-	ControlTargetFilter_None  = "None"
+	ControlTargetFilter_All            = "ALL"
+	ControlTargetFilter_Vaild          = "Valid"
+	ControlTargetFilter_None           = "None"
+	TrafficControlTargetStatusOfClosed = "Closed"
 )
 
 var (
@@ -101,4 +105,9 @@ const (
 const (
 	TrafficControlTargets_Status_Open  = "Opened"
 	TrafficControlTargets_Status_Close = "Closed"
+)
+
+const (
+	TrafficControlTaskExecutionTimeOfPermanent = "Permanent"
+	TrafficControlTaskExecutionTimeOfTimeRange = "TimeRange"
 )

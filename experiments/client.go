@@ -60,10 +60,10 @@ type ExperimentClient struct {
 	sceneParamData map[string]model.SceneParams
 
 	// sceneFlowCtrlPlanData map of flow ctrl plan of scene name
-	productSceneTrafficControlTaskData map[string][]model.TrafficControlTask
+	productTrafficControlTasks []*model.TrafficControlTask
 
 	// prepubSceneFlowCtrlPlanData map of flow ctrl plan of scene name (prepub env)
-	prepubSceneTrafficControlTaskData map[string][]model.TrafficControlTask
+	prepubTrafficControlTasks []*model.TrafficControlTask
 
 	// Logger specifies a logger used to report internal changes within the writer
 	Logger Logger
@@ -127,8 +127,8 @@ func NewExperimentClient(instanceId, regionId, accessKeyId, accessKeySecret, env
 	go client.loopLoadExperimentData()
 	go client.loopLoadSceneParamsData()
 
-	client.LoadSceneTrafficControlTasksData()
-	go client.loopLoadSceneFlowCtrlPlansData()
+	client.LoadTrafficControlTasks()
+	go client.LoopLoadTrafficControlTasks()
 
 	return &client, nil
 }
@@ -285,5 +285,13 @@ func (e *ExperimentClient) hashValue(hashKey string) uint64 {
 func (e *ExperimentClient) logInfo(msg string, args ...interface{}) {
 	if e.Logger != nil {
 		e.Logger.Printf(msg, args...)
+	}
+}
+
+func (e *ExperimentClient) ListTrafficControlTasks(env string) []*model.TrafficControlTask {
+	if env == common.Environment_Prepub_Desc {
+		return e.prepubTrafficControlTasks
+	} else {
+		return e.productTrafficControlTasks
 	}
 }

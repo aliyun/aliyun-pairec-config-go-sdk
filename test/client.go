@@ -14,10 +14,10 @@ func CreateExperimentClient(environment string) *experiments.ExperimentClient {
 	accessKey := os.Getenv("ACCESS_KEY")
 	instanceId := os.Getenv("INSTANCE_ID")
 	//address := "pairecservice." + region + ".aliyuncs.com"
-	preAddress := "pairecservice-pre." + region + ".aliyuncs.com"
+	address := "pairecservice-pre." + region + ".aliyuncs.com"
 	client, err := experiments.NewExperimentClient(instanceId, region, accessId, accessKey, environment,
 		experiments.WithLogger(experiments.LoggerFunc(log.Printf)),
-		experiments.WithDomain(preAddress))
+		experiments.WithDomain(address))
 
 	if err != nil {
 		log.Fatal(err)

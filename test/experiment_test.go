@@ -82,8 +82,6 @@ func TestFeatureConsistencyReply(t *testing.T) {
 	}
 }
 
-// /**
-
 func TestCheckExperimentRoomDebugUsers(t *testing.T) {
 	client := CreateExperimentClient(common.Environment_Prepub_Desc)
 	client.LoadExperimentData()

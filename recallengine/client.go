@@ -1,0 +1,166 @@
+package recallengine
+
+import (
+	"bytes"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
+	"net"
+	"net/http"
+	"time"
+
+	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
+	pairecservice20221213 "github.com/alibabacloud-go/pairecservice-20221213/v4/client"
+	"github.com/alibabacloud-go/tea/tea"
+	"gitlab.alibaba-inc.com/pai_biz_arch/recall_engine/server/domain"
+)
+
+var (
+	defaultRequestTimeout = 3 * time.Second
+	defaultTransport      = &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   100 * time.Millisecond,
+			KeepAlive: 5 * time.Minute,
+		}).DialContext,
+		MaxIdleConns:          1000,
+		MaxIdleConnsPerHost:   1000,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 10 * time.Second,
+	}
+	defaultHttpClient = &http.Client{
+		Timeout:   defaultRequestTimeout,
+		Transport: defaultTransport,
+	}
+)
+
+type Client struct {
+	Endpoint string
+	Username string
+	Password string
+
+	// Logger specifies a logger used to report internal changes within the writer
+	Logger Logger
+
+	// ErrorLogger is the logger to report errors
+	ErrorLogger Logger
+
+	httpClient *http.Client
+}
+
+func NewClient(endpoint, username, password string, opts ...ClientOption) *Client {
+	client := Client{
+		Endpoint: endpoint,
+		Username: username,
+		Password: password,
+
+		httpClient: defaultHttpClient,
+	}
+
+	for _, opt := range opts {
+		opt(&client)
+	}
+
+	return &client
+}
+
+func (c *Client) Recall(request *RecallRequest) (*RecallResponse, error) {
+	body, err := json.Marshal(request)
+	if err != nil {
+		return nil, fmt.Errorf("invalid request, err: %w", err)
+	}
+
+	url := fmt.Sprintf("https://%s/api/v1/recall", c.Endpoint)
+	req, _ := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Auth", c.buildAuth())
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed, err: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body, err: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("response status code: %d", resp.StatusCode)
+	}
+
+	record := domain.UnSerializeRecord(respBody)
+
+	return &RecallResponse{Result: record}, nil
+}
+
+func (c *Client) buildAuth() string {
+	return base64.StdEncoding.EncodeToString([]byte(c.Username + ":" + c.Password))
+}
+
+type GetRecallEngineEndpointOption struct {
+	PAIRecServiceEndpoint string
+
+	VpcId string
+}
+
+func GetRecallEngineEndpoint(instanceId, regionId, accessKeyId, accessKeySecret string, option *GetRecallEngineEndpointOption) (string, error) {
+	var pairecServiceEndpoint string
+	if option != nil && option.PAIRecServiceEndpoint != "" {
+		pairecServiceEndpoint = option.PAIRecServiceEndpoint
+	} else {
+		pairecServiceEndpoint = fmt.Sprintf("pairecservice-vpc.%s.aliyuncs.com", regionId)
+	}
+
+	config := &openapi.Config{
+		Endpoint:        tea.String(pairecServiceEndpoint),
+		AccessKeyId:     tea.String(accessKeyId),
+		AccessKeySecret: tea.String(accessKeySecret),
+	}
+
+	pairecClient, err := pairecservice20221213.NewClient(config)
+	if err != nil {
+		return "", err
+	}
+
+	request := &pairecservice20221213.GetRecallManagementConfigRequest{
+		InstanceId: tea.String(instanceId),
+	}
+
+	response, err := pairecClient.GetRecallManagementConfig(request)
+	if response.StatusCode != nil && *response.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("invalid response: %s", response.String())
+	}
+
+	if response.Body != nil && len(response.Body.NetworkConfigs) > 0 {
+		if option.VpcId == "" {
+			if len(response.Body.NetworkConfigs) == 1 {
+				if response.Body.NetworkConfigs[0].PrivateLinkAddress != nil && response.Body.NetworkConfigs[0].Status != nil {
+					if *response.Body.NetworkConfigs[0].Status != "Connected" {
+						return "", errors.New("endpoint unavailable")
+					}
+					return *response.Body.NetworkConfigs[0].PrivateLinkAddress, nil
+				}
+			} else {
+				return "", errors.New("multiple VPCs were found, please specify the VpcId")
+			}
+		} else {
+			for _, networkConfig := range response.Body.NetworkConfigs {
+				if networkConfig != nil && networkConfig.VpcId != nil && networkConfig.PrivateLinkAddress != nil && response.Body.NetworkConfigs[0].Status != nil {
+					if *response.Body.NetworkConfigs[0].Status != "Connected" {
+						continue
+					}
+
+					if option.VpcId == *networkConfig.VpcId {
+						return *networkConfig.PrivateLinkAddress, nil
+					}
+				}
+			}
+		}
+	}
+
+	return "", errors.New("no available endpoints found")
+}

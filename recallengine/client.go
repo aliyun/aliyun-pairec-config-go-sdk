@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	defaultRequestTimeout = 3 * time.Second
+	defaultRequestTimeout = 500 * time.Millisecond
 	defaultTransport      = &http.Transport{
 		DialContext: (&net.Dialer{
 			Timeout:   100 * time.Millisecond,
@@ -26,6 +26,7 @@ var (
 		}).DialContext,
 		MaxIdleConns:          1000,
 		MaxIdleConnsPerHost:   1000,
+		MaxConnsPerHost:       1000,
 		IdleConnTimeout:       90 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
 		ExpectContinueTimeout: 10 * time.Second,
@@ -52,6 +53,8 @@ type Client struct {
 	ErrorLogger Logger
 
 	httpClient *http.Client
+
+	auth string
 }
 
 func NewClient(endpoint, username, password string, opts ...ClientOption) *Client {
@@ -130,7 +133,10 @@ func (c *Client) doRecall(request *RecallRequest) (*RecallResponse, error) {
 }
 
 func (c *Client) buildAuth() string {
-	return base64.StdEncoding.EncodeToString([]byte(c.Username + ":" + c.Password))
+	if c.auth == "" {
+		c.auth = base64.StdEncoding.EncodeToString([]byte(c.Username + ":" + c.Password))
+	}
+	return c.auth
 }
 
 type GetRecallEngineEndpointOption struct {

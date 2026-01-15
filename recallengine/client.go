@@ -14,7 +14,7 @@ import (
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
 	pairecservice20221213 "github.com/alibabacloud-go/pairecservice-20221213/v4/client"
 	"github.com/alibabacloud-go/tea/tea"
-	"gitlab.alibaba-inc.com/pai_biz_arch/recall_engine/server/domain"
+	"github.com/aliyun/credentials-go/credentials"
 )
 
 var (
@@ -40,6 +40,10 @@ type Client struct {
 	Endpoint string
 	Username string
 	Password string
+
+	RetryTimes int
+
+	RequestHeaders map[string]string
 
 	// Logger specifies a logger used to report internal changes within the writer
 	Logger Logger
@@ -67,6 +71,24 @@ func NewClient(endpoint, username, password string, opts ...ClientOption) *Clien
 }
 
 func (c *Client) Recall(request *RecallRequest) (*RecallResponse, error) {
+	if c.RetryTimes > 0 {
+		var err error
+		for i := 0; i < c.RetryTimes; i++ {
+			var recallResponse *RecallResponse
+			recallResponse, err = c.doRecall(request)
+			if err == nil {
+				return recallResponse, nil
+			} else if c.Logger != nil {
+				c.Logger.Printf("recallengine: recall failed, retrying..., err: %s", err.Error())
+			}
+		}
+		return nil, err
+	} else {
+		return c.doRecall(request)
+	}
+}
+
+func (c *Client) doRecall(request *RecallRequest) (*RecallResponse, error) {
 	body, err := json.Marshal(request)
 	if err != nil {
 		return nil, fmt.Errorf("invalid request, err: %w", err)
@@ -76,6 +98,10 @@ func (c *Client) Recall(request *RecallRequest) (*RecallResponse, error) {
 	req, _ := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Auth", c.buildAuth())
+
+	for k, v := range c.RequestHeaders {
+		req.Header.Set(k, v)
+	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -89,10 +115,16 @@ func (c *Client) Recall(request *RecallRequest) (*RecallResponse, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
+		var bodyMap map[string]any
+		if err := json.Unmarshal(respBody, &bodyMap); err == nil {
+			if msg, ok := bodyMap["message"]; ok {
+				return nil, fmt.Errorf("request failed, response status code: %d, message: %s", resp.StatusCode, msg)
+			}
+		}
 		return nil, fmt.Errorf("response status code: %d", resp.StatusCode)
 	}
 
-	record := domain.UnSerializeRecord(respBody)
+	record := UnSerializeRecord(respBody)
 
 	return &RecallResponse{Result: record}, nil
 }
@@ -104,10 +136,14 @@ func (c *Client) buildAuth() string {
 type GetRecallEngineEndpointOption struct {
 	PAIRecServiceEndpoint string
 
+	AccessKeyId string
+
+	AccessKeySecret string
+
 	VpcId string
 }
 
-func GetRecallEngineEndpoint(instanceId, regionId, accessKeyId, accessKeySecret string, option *GetRecallEngineEndpointOption) (string, error) {
+func GetRecallEngineEndpoint(instanceId, regionId string, option *GetRecallEngineEndpointOption) (string, error) {
 	var pairecServiceEndpoint string
 	if option != nil && option.PAIRecServiceEndpoint != "" {
 		pairecServiceEndpoint = option.PAIRecServiceEndpoint
@@ -116,9 +152,18 @@ func GetRecallEngineEndpoint(instanceId, regionId, accessKeyId, accessKeySecret 
 	}
 
 	config := &openapi.Config{
-		Endpoint:        tea.String(pairecServiceEndpoint),
-		AccessKeyId:     tea.String(accessKeyId),
-		AccessKeySecret: tea.String(accessKeySecret),
+		Endpoint: tea.String(pairecServiceEndpoint),
+	}
+
+	if option != nil && option.AccessKeyId != "" && option.AccessKeySecret != "" {
+		config.AccessKeyId = tea.String(option.AccessKeyId)
+		config.AccessKeySecret = tea.String(option.AccessKeySecret)
+	} else {
+		credential, err := credentials.NewCredential(nil)
+		if err != nil {
+			return "", fmt.Errorf("failed to create credential, err: %w", err)
+		}
+		config.Credential = credential
 	}
 
 	pairecClient, err := pairecservice20221213.NewClient(config)

@@ -97,7 +97,7 @@ func (c *Client) doRecall(request *RecallRequest) (*RecallResponse, error) {
 		return nil, fmt.Errorf("invalid request, err: %w", err)
 	}
 
-	url := fmt.Sprintf("https://%s/api/v1/recall", c.Endpoint)
+	url := fmt.Sprintf("%s/api/v1/recall", c.Endpoint)
 	req, _ := http.NewRequest(http.MethodPost, url, bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Auth", c.buildAuth())

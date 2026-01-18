@@ -1,5 +1,10 @@
 package recallengine
 
+import (
+	"fmt"
+	"strings"
+)
+
 type ClientOption func(c *Client)
 
 func WithLogger(l Logger) ClientOption {
@@ -26,5 +31,13 @@ func WithRequestHeader(key string, value string) ClientOption {
 func WithRetryTimes(times int) ClientOption {
 	return func(e *Client) {
 		e.RetryTimes = times
+	}
+}
+
+func WithEndpointSchema(schema string) ClientOption {
+	return func(e *Client) {
+		if !strings.HasPrefix(e.Endpoint, "http") && !strings.HasPrefix(e.Endpoint, "https") {
+			e.Endpoint = fmt.Sprintf("%s://%s", schema, e.Endpoint)
+		}
 	}
 }

@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"math/rand/v2"
 	"sort"
-	"sync"
 
 	"github.com/aliyun/aliyun-pairec-config-go-sdk/v2/common"
 )
 
+// Record is not concurrency safe
 type Record struct {
-	sync.RWMutex
-	//size        int
 	columnData map[string]IColumn
 	tableIndex *TableIndex
 	cacheData  map[int]map[string]any
@@ -35,20 +33,14 @@ func (r *Record) Size() int {
 	return r.tableIndex.RowCount()
 }
 func (r *Record) SetColumn(name string, column IColumn) {
-	r.Lock()
-	defer r.Unlock()
 	r.columnData[name] = column
 }
 func (r *Record) GetColumn(name string) IColumn {
-	r.RLock()
-	defer r.RUnlock()
 	return r.columnData[name]
 }
 
 func (r *Record) Sort(name string, desc bool) {
-	r.RLock()
 	column, exist := r.columnData[name]
-	r.RUnlock()
 	if !exist {
 		return
 	}
@@ -74,8 +66,7 @@ func (r *Record) Sort(name string, desc bool) {
 	for _, item := range sortItems {
 		indexes = append(indexes, uint32(item.index))
 	}
-	r.Lock()
-	defer r.Unlock()
+
 	r.tableIndex.Rebuild(len(indexes), indexes)
 }
 func (r *Record) Len() int {
@@ -102,8 +93,7 @@ func (r *Record) Merge(other *Record) *Record {
 	indexes := make([]uint32, size+otherSize)
 	copy(indexes, r.tableIndex.Indexes())
 	columnSize := -1
-	r.Lock()
-	defer r.Unlock()
+
 	columnNamesMap := make(map[string]bool, len(r.columnData))
 	for name, column := range r.columnData {
 		if column == nil {
@@ -414,9 +404,7 @@ func (r *Record) Merge(other *Record) *Record {
 	return r
 }
 func (r *Record) Filter(name string) *Record {
-	r.RLock()
 	column, ok := r.columnData[name]
-	r.RUnlock()
 	if !ok {
 		return r
 	}
@@ -442,9 +430,7 @@ func (r *Record) Filter(name string) *Record {
 	return r
 }
 func (r *Record) FilterByColumnValue(name string, f func(v any) bool) *Record {
-	r.RLock()
 	column, ok := r.columnData[name]
-	r.RUnlock()
 	if !ok {
 		return r
 	}
@@ -476,8 +462,6 @@ func (r *Record) FilterByColumnValue(name string, f func(v any) bool) *Record {
 // 该函数会遍历所有记录，对每条记录执行过滤函数，如果返回false则标记为删除
 // 最终会更新索引并返回处理后的记录对象
 func (r *Record) FilterByValues(f func(m map[string]any) bool) *Record {
-	r.RLock()
-	defer r.RUnlock()
 
 	size := r.tableIndex.RowCount()
 	removed := 0
@@ -523,9 +507,7 @@ func (r *Record) FilterByValues(f func(m map[string]any) bool) *Record {
 	return r
 }
 func (r *Record) ColumnValues(columnName string) (ret []any) {
-	r.RLock()
 	column := r.columnData[columnName]
-	r.RUnlock()
 	if column == nil {
 		return nil
 	}
@@ -620,9 +602,7 @@ func (r *Record) ApplyValues(columnName string, f func(m map[string]any) any) *R
 //
 //	ret: 该列所有有效记录的字符串切片，如果列不存在则返回nil
 func (r *Record) ColumnValuesString(columnName string) (ret []string) {
-	r.RLock()
 	column := r.columnData[columnName]
-	r.RUnlock()
 
 	if column == nil {
 		return nil
@@ -642,9 +622,7 @@ func (r *Record) ColumnValuesString(columnName string) (ret []string) {
 	return
 }
 func (r *Record) ColumnValuesFloat64(columnName string) (ret []float64) {
-	r.RLock()
 	column := r.columnData[columnName]
-	r.RUnlock()
 
 	if column == nil {
 		return nil
@@ -672,8 +650,6 @@ func (r *Record) Random() {
 }
 
 func (r *Record) String() string {
-	r.RLock()
-	defer r.RUnlock()
 	buf := bytes.NewBuffer(nil)
 	size := r.tableIndex.RowCount()
 

@@ -2,6 +2,7 @@ module github.com/aliyun/aliyun-pairec-config-go-sdk/v2
 
 go 1.24.0
 
+
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
 	github.com/antihax/optional v1.0.0

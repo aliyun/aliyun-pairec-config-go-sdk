@@ -28,6 +28,9 @@ func NewRecord(size int) *Record {
 
 	return recrod
 }
+func (r *Record) TableIndex() *TableIndex {
+	return r.tableIndex
+}
 
 func (r *Record) Size() int {
 	return r.tableIndex.RowCount()
@@ -648,13 +651,21 @@ func (r *Record) Random() {
 
 	r.tableIndex.Rebuild(len(indexes), indexes)
 }
+func (r *Record) FieldNames() []string {
+	fieldNames := make([]string, 0, len(r.columnData))
+	for name := range r.columnData {
+		fieldNames = append(fieldNames, name)
+	}
+	return fieldNames
+}
 
 func (r *Record) String() string {
 	buf := bytes.NewBuffer(nil)
 	size := r.tableIndex.RowCount()
 
 	buf.WriteString(fmt.Sprintf("count:%d\t", size))
-	var fieldNames []string
+	fieldNames := make([]string, 0, len(r.columnData))
+
 	for name, column := range r.columnData {
 		if column == nil {
 			continue

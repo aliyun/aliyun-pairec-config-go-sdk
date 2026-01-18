@@ -21,7 +21,7 @@ var (
 	defaultRequestTimeout = 500 * time.Millisecond
 	defaultTransport      = &http.Transport{
 		DialContext: (&net.Dialer{
-			Timeout:   100 * time.Millisecond,
+			Timeout:   200 * time.Millisecond,
 			KeepAlive: 5 * time.Minute,
 		}).DialContext,
 		MaxIdleConns:          1000,

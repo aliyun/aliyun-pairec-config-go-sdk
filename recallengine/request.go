@@ -20,3 +20,9 @@ type RecallRequest struct {
 	ContextParams map[string]any        `json:"context_params"`
 	Debug         bool                  `json:"debug"`
 }
+
+type WriteRequest struct {
+	Request
+	Content   []map[string]any `json:"content"`
+	VersionId string
+}

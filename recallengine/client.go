@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
+	"sync"
 	"time"
 
 	openapi "github.com/alibabacloud-go/darabonba-openapi/v2/client"
@@ -34,6 +34,12 @@ var (
 	defaultHttpClient = &http.Client{
 		Timeout:   defaultRequestTimeout,
 		Transport: defaultTransport,
+	}
+
+	bufPool = sync.Pool{
+		New: func() any {
+			return bytes.NewBuffer(make([]byte, 0, 16*1024))
+		},
 	}
 )
 
@@ -112,10 +118,17 @@ func (c *Client) doRecall(request *RecallRequest) (*RecallResponse, error) {
 	}
 	defer resp.Body.Close()
 
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
+	buf := bufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	defer bufPool.Put(buf)
+
+	if resp.ContentLength > 0 {
+		buf.Grow(int(resp.ContentLength))
+	}
+	if _, err = buf.ReadFrom(resp.Body); err != nil {
 		return nil, fmt.Errorf("failed to read response body, err: %w", err)
 	}
+	respBody := buf.Bytes()
 
 	if resp.StatusCode != http.StatusOK {
 		var bodyMap map[string]any

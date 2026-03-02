@@ -259,12 +259,20 @@ func (r *ExperimentResult) GetExperimentParams() LayerParams {
 	if r.SceneName != GlobalSceneName {
 		if r.mergedLayerParams == nil {
 			mergedParams := NewLayerParams()
+			scenePrefix := r.SceneName + "."
 			if r.GlobalSceneExperimentResult != nil { // if SceneName not found,  GlobalSceneExperimentResult will be nil
 				for _, unmergedParams := range r.GlobalSceneExperimentResult.layerParamsMap {
 					switch v := unmergedParams.(type) {
 					case *layerParams:
 						for k, p := range v.Parameters {
 							mergedParams.Parameters[k] = p
+							// If key starts with current scene prefix, also add stripped key (without overwriting)
+							if strings.HasPrefix(k, scenePrefix) {
+								strippedKey := strings.TrimPrefix(k, scenePrefix)
+								if _, exists := mergedParams.Parameters[strippedKey]; !exists {
+									mergedParams.Parameters[strippedKey] = p
+								}
+							}
 						}
 					}
 				}

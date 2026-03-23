@@ -19,6 +19,7 @@ type RecallRequest struct {
 	ExposureList  string                `json:"exposure_list"`
 	ContextParams map[string]any        `json:"context_params"`
 	Debug         bool                  `json:"debug"`
+	RetainFields  []string              `json:"retain_fields"`
 }
 
 type WriteRequest struct {

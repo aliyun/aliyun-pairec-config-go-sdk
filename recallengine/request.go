@@ -4,9 +4,14 @@ type Request struct {
 	RequestId string `json:"request_id"`
 }
 
+type RecallOptions struct {
+	TriggerLimit int `json:"trigger_limit,omitempty"`
+}
+
 type RecallConf struct {
-	Trigger string `json:"trigger"`
-	Count   int    `json:"count"`
+	Trigger string         `json:"trigger"`
+	Count   int            `json:"count"`
+	Options *RecallOptions `json:"options,omitempty"`
 }
 
 type RecallRequest struct {

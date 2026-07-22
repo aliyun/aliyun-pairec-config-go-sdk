@@ -1,6 +1,6 @@
 module github.com/aliyun/aliyun-pairec-config-go-sdk/v2
 
-go 1.24.0
+go 1.25.0
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible
@@ -23,7 +23,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
-	golang.org/x/net v0.46.1-0.20251013234738-63d1a5100f82 // indirect
+	golang.org/x/net v0.55.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0 // indirect
 )

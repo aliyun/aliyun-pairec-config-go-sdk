@@ -122,6 +122,7 @@ func (e *ExperimentClient) LoadExperimentData() {
 				}
 			}
 		}
+		scene.BuildExperimentIndex()
 		sceneData[scene.SceneName] = scene
 	}
 	if len(sceneData) > 0 {

@@ -24,6 +24,10 @@ type ExperimentContext struct {
 	// FilterParams is map of params, use for filter condition
 	FilterParams map[string]interface{}
 
+	// ForceExperimentPlan is the force plan produced by ExperimentClient.ResolveExperimentIds,
+	// the forced experiments take priority over the natural diversion when it is not nil
+	ForceExperimentPlan *ForcePlan
+
 	experimentHashStr string
 }
 

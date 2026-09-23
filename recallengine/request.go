@@ -10,9 +10,11 @@ type RecallOptions struct {
 }
 
 type RecallConf struct {
-	Trigger string         `json:"trigger"`
-	Count   int            `json:"count"`
-	Options *RecallOptions `json:"options,omitempty"`
+	Trigger                string         `json:"trigger"`
+	Count                  int            `json:"count"`
+	Options                *RecallOptions `json:"options,omitempty"`
+	VersionId              string         `json:"version_id,omitempty"`
+	UserEmbeddingVersionId string         `json:"user_embedding_version_id,omitempty"`
 }
 
 type RecallRequest struct {

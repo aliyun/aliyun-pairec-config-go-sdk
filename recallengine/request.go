@@ -10,6 +10,7 @@ type RecallOptions struct {
 }
 
 type RecallConf struct {
+	Queries                [][]float32    `json:"queries,omitempty"`
 	Trigger                string         `json:"trigger"`
 	Count                  int            `json:"count"`
 	Options                *RecallOptions `json:"options,omitempty"`

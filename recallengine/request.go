@@ -5,8 +5,9 @@ type Request struct {
 }
 
 type RecallOptions struct {
-	TriggerLimit int `json:"trigger_limit,omitempty"` // per-trigger recall limit, 0 means no limit
-	Timeout      int `json:"timeout,omitempty"`       // per-way recall timeout in milliseconds, 0 means no per-way timeout
+	IVFNprobePct float32 `json:"ivf_nprobe_pct,omitempty"`
+	TriggerLimit int     `json:"trigger_limit,omitempty"` // per-trigger recall limit, 0 means no limit
+	Timeout      int     `json:"timeout,omitempty"`       // per-way recall timeout in milliseconds, 0 means no per-way timeout
 }
 
 type RecallConf struct {

@@ -30,4 +30,15 @@ type FeatureConsistencyJob struct {
 	Status                               int    `json:"status"`
 	StartTime                            int64  `json:"start_time"`
 	EndTime                              int64  `json:"end_time"`
+	// SkipFeatureReply is a runtime-only field delivered via t_param.param_value JSON.
+	// When true, the engine carries the special debug level in the online scoring
+	// request so the model service writes features to OSS CSV directly, skipping the
+	// /api/feature_reply relay. A missing field decodes to false (backward compatible).
+	SkipFeatureReply bool `gorm:"-" json:"skip_feature_reply"`
+	// LatestHistoryJobId is the history id of the current job run, delivered via
+	// t_param.param_value JSON. The engine uses it as the task_id meta_data value so
+	// the model service lands OSS CSV under a per-run subdirectory
+	// ({log_oss_path}/{task_id}/{uuid}.csv). It is unique per run, unlike JobId which
+	// is stable across runs and would pile up historical CSVs in one directory.
+	LatestHistoryJobId int `json:"latest_history_job_id"`
 }
